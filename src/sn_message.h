@@ -35,6 +35,7 @@ public:
 
     //@encode to raw bytes stream
     //@return bytes stream and size of stream
+	//@note caller will own the raw stream pointer
     std::tuple<uint8_t*, size_t> encode()const;
 
 
