@@ -32,6 +32,29 @@ void RouteTable::add(const Address &dst_snode
         ilist->second.push_back(item);
 }
 
+///|dst|RouteItem|
+///|1  |item1     |
+///|   |item2     |
+///|2  |item1     |
+///|   |item2     |
+std::string RouteTable::serialize()const
+{
+    std::string str="{[
+    {\"dst\":\"\"[
+            {\"mask\":\"\",\"metric\":\"\",\"port\":\"\"},
+            {\"mask\":\"\",\"metric\":\"\",\"port\":\"\"},
+          ]
+    },
+    {\"dst\":\"\"[
+            {\"mask\":\"\",\"metric\":\"\",\"port\":\"\"},
+            {\"mask\":\"\",\"metric\":\"\",\"port\":\"\"},
+          ]
+    }
+    ]}";
+
+    return str;
+}
+
 port_ptr RouteTable::getBestRoute(const List& list)
 {
     if(list.size() == 0){

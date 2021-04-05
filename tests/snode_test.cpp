@@ -164,6 +164,12 @@ void updateRoute()
 {
 }
 
+void dumpRoute()
+{
+    cout<<"------------routes-----------------\n";
+    cout<<router.toString()<<endl;
+}
+
 void setNeighbours(const NeighbourMap& ns)
 {
     for(auto& neib : ns){
@@ -176,10 +182,6 @@ void setNeighbours(const NeighbourMap& ns)
 
 	    router.addRouting(neib.addr, 1, port);
     }
-}
-
-void dumpRoute()
-{
 }
 
 int main(int argc, char* argv[])

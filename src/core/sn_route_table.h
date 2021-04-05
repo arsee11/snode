@@ -30,6 +30,7 @@ public:
                      ,int metric
                      ,const port_ptr& port);
 
+    std::string serialize()const;
 
 private:
     ///|dst|RouteItem|

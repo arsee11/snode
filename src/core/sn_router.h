@@ -66,6 +66,8 @@ public:
 		_ports.push_back(port);
 	}
 
+    std::string toString()const;
+
 private:
     void onPortInput(Port* srcport, const Message& msg){
 
