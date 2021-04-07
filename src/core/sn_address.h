@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <functional>
 #include <assert.h>
+#include <endian.h>
 
 namespace snode
 {
@@ -24,12 +25,12 @@ public:
 private:
 	struct addr_t{
         //little endian
-		uint64_t en:40;
-		uint64_t sn:24;
+		uint32_t en;
+		uint32_t sn;
 	};
 
 public:
-	Address(uint64_t sn, uint64_t en){
+	Address(uint32_t sn, uint32_t en){
 		assert(sn<=SN_MAX);
 		assert(en<=EN_MAX);
 
@@ -40,7 +41,7 @@ public:
     Address(raw_t raw=0, bool is_network_order=false){
         if(is_network_order)
         {
-            raw_t tmp = (raw);
+            raw_t tmp = htobe64(raw);
             _addr = *(addr_t*)&tmp;
         }
         else
@@ -51,10 +52,10 @@ public:
     size_t size()const{ return sizeof _addr;}
 
 	///super node address
-	uint64_t sn()const{ return _addr.sn; }
+	uint32_t sn()const{ return _addr.sn; }
 	
 	///endian node address
-    uint64_t en()const{ return _addr.en; }
+    uint32_t en()const{ return _addr.en; }
 
 	///super node mask
     raw_t mask();
@@ -64,7 +65,7 @@ public:
 	}
 	
     //to network byte order
-    raw_t rawton()const{ return (raw()); }
+    raw_t rawton()const{ return htobe64(raw()); }
 
 	bool operator==(const Address& rhs)const{
 		return raw() == rhs.raw();
@@ -80,8 +81,8 @@ public:
 	}
 
 private:
-	static constexpr uint64_t SN_MASK=0xffffff0000000000;
-	static constexpr uint64_t EN_MASK=0x000000ffffffffff;
+	static constexpr uint64_t SN_MASK=0xffffffff00000000;
+	static constexpr uint64_t EN_MASK=0x00000000ffffffff;
 
 	addr_t _addr;
 };

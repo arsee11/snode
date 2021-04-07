@@ -11,7 +11,9 @@ class TransportManager
 {
 public:
     TransportManager();
+    void clear();
     UdpTransport* getUdpTransport(const TransEndpoint& local);
+    UdpTransport* getUdpTransport(const std::string& lip);
 
 private:
     void evtLoop();
@@ -19,6 +21,7 @@ private:
 private:
     NetEventQueue _evt_queue;
     ThreadScope _thread;
+    bool _is_running=true;
 
 };
 

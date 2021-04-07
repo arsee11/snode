@@ -1,12 +1,13 @@
 ///snode_test.cpp
 
-#include "sn_transport_manager.h"
-#include "sn_address_manager.h"
-#include "sn_port.h"
-#include "sn_message.h"
-#include "sn_router.h"
-#include "sn_route_table.h"
-#include "sn_rip_routing.h"
+#include "core/sn_transport_manager.h"
+#include "core/sn_address_manager.h"
+#include "core/sn_port.h"
+#include "core/sn_message.h"
+#include "core/sn_router.h"
+#include "core/sn_route_table.h"
+#include "core/sn_rip_routing.h"
+#include "snode/sn_json_serializer.h"
 #include "commands.h"
 
 #include <boost/json.hpp>
@@ -16,10 +17,11 @@ using namespace snode;
 #include <iostream>
 using namespace std;
 using namespace std::placeholders;
+using RouterImpl=Router<RIPRouting, RouteTable>;
 
-Router<RIPRouting, RouteTable> router;
+RouterImpl router;
 TransportManager transportmgr;
-AddressManager addressmgr(Address(1ul, 0ul));
+AddressManager addressmgr(Address(1u, 0u));
 CommandParser parser;
 
 std::string local_ip="127.0.0.1";
@@ -33,7 +35,7 @@ struct Neighbour
 
 using NeighbourMap=std::list<Neighbour>; 
 NeighbourMap neighbours{
-    {Address(2ul, 1ul), {"127.0.0.1", 10011}}
+    {Address(2u, 1u), {"192.168.127.185", 10011}}
 	
 };
     
@@ -78,9 +80,9 @@ public:
     }
 
     void commit()override{
-        static_cast<NetTransport*>(_port->getTransport())->remote_ep(_remote_ep);
+        static_cast<NetTransport*>(_port->transport())->remote_ep(_remote_ep);
 	    router.addPort(_port);
-	    router.addRouting(_alloced_addr, 1, _port);
+	    router.addRouting(_alloced_addr, 1, _alloced_addr, _port);
     }
 
     void rollback()override{
@@ -97,18 +99,18 @@ std::shared_ptr<RegisterTransaction> rtransaction;
 cmd_ptr onRegister(Command* req)
 {
     rtransaction.reset(new RegisterTransaction(req->id) );
-	Transport* udp = transportmgr.getUdpTransport(
-        TransEndpoint{local_ip, 10012}
-    );
+	Transport* udp = transportmgr.getUdpTransport(local_ip);
 
     Address addr = addressmgr.allocAddress();
 	port_ptr port = std::make_shared<Port>();
-    port->setAddress(addr);
+    //port->setAddress(addr);
     port->setTransport(udp);
 
     AddressConfigCmd* cmd = new AddressConfigCmd;
     cmd->id = req->id;
     cmd->address = addr.raw();
+    cmd->ip = local_ip;
+    cmd->port = udp->local_ep().port;
     rtransaction->addressSent(port, addr);
     return cmd_ptr(cmd);
 }
@@ -167,7 +169,8 @@ void updateRoute()
 void dumpRoute()
 {
     cout<<"------------routes-----------------\n";
-    cout<<router.toString()<<endl;
+    JsonRouteSerializer<RouterImpl> s(&router);
+    cout<<s()<<endl;
 }
 
 void setNeighbours(const NeighbourMap& ns)
@@ -180,7 +183,7 @@ void setNeighbours(const NeighbourMap& ns)
         port->setTransport(udp);
 	    router.addPort(port);
 
-	    router.addRouting(neib.addr, 1, port);
+	    router.addRouting(neib.addr, 1, neib.addr, port);
     }
 }
 
@@ -204,9 +207,25 @@ int main(int argc, char* argv[])
     service_trans->open();
     service_trans->listenOnRecv(&onRecvCmd);
 
-	while(true){
-		eq.process();
-	}
+    bool running=true;
+    std::thread t([&running, &eq]() {
+	    while(running){
+		    eq.process();
+	    }
+    });
+
+    char ch;
+    while(ch != 'q'){
+        cout<<">>";
+        cin >> ch;
+        if(ch == 'd'){
+            dumpRoute();
+        }
+    }
+
+    running = false;
+    t.join();
+    transportmgr.clear();
 
 	return 0;
 }

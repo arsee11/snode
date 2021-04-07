@@ -17,6 +17,8 @@ class Transport
 public:
     //virtual bool open()=0;
     //virtual bool close()=0;
+    virtual TransEndpoint local_ep()const=0;
+    virtual TransEndpoint remote_ep()const=0;
     virtual int send(const void* data, int size)=0;
     void listenOnRecv(RecvCb cb){ _recv_cb = cb; }
 
@@ -36,7 +38,8 @@ public:
     {
     }
 
-    TransEndpoint local_ep()const{ return _local_ep; }
+    TransEndpoint local_ep()const override{ return _local_ep; }
+    TransEndpoint remote_ep()const override{ return _remote_ep; }
     void remote_ep(const TransEndpoint& ep){ _remote_ep = ep; }
 
 protected:

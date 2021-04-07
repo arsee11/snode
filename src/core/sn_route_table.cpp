@@ -7,52 +7,48 @@ namespace snode{
 
 port_ptr snode::RouteTable::routing(const Address &dst)
 {
-    Address saddr(dst.sn(), 0ul);
-    auto ilist = _routes.find(saddr);
-    if( ilist == _routes.end() )
-        return nullptr;
-
-     return getBestRoute(ilist->second);
+    ///first match full address
+    auto ilist = _routes.find(dst);
+    if( ilist == _routes.end() ){
+        ///second if full address not match, then macth the sn address
+        Address saddr(dst.sn(), 0ul);
+        ilist = _routes.find(saddr);
+        if( ilist == _routes.end() )
+            return nullptr;
+    }
+    return getBestRoute(ilist->second);
 }
 
-void RouteTable::add(const Address &dst_snode
-                                   ,int metric
-                                   ,const snode::port_ptr &port)
+void RouteTable::add(const Address &dst,
+                    int metric,
+                    const Address& next_hop, 
+                    const snode::port_ptr &port
+)
 {
-    assert(dst_snode.en() != 0);
-    RouteItem item{dst_snode, 0, metric, port};
-    auto ilist = _routes.find(dst_snode);
+    //dst, mask, next_hop, port
+    RouteItem item{dst, 0, metric, next_hop, port};
+    auto ilist = _routes.find(dst);
     if( ilist == _routes.end() )
     {
         List list;
         list.push_back(item);
-        _routes.insert({dst_snode, list});
+        _routes.insert({dst, list});
     }
     else
         ilist->second.push_back(item);
 }
 
-///|dst|RouteItem|
-///|1  |item1     |
-///|   |item2     |
-///|2  |item1     |
-///|   |item2     |
-std::string RouteTable::serialize()const
+std::vector<RouteItem> RouteTable::getAllItems()const
 {
-    std::string str="{[
-    {\"dst\":\"\"[
-            {\"mask\":\"\",\"metric\":\"\",\"port\":\"\"},
-            {\"mask\":\"\",\"metric\":\"\",\"port\":\"\"},
-          ]
-    },
-    {\"dst\":\"\"[
-            {\"mask\":\"\",\"metric\":\"\",\"port\":\"\"},
-            {\"mask\":\"\",\"metric\":\"\",\"port\":\"\"},
-          ]
+    std::vector<RouteItem> items;
+    for(auto& it: _routes){
+        auto& l = it.second;
+        for(auto& i : l){
+            items.push_back(i); 
+        }
     }
-    ]}";
 
-    return str;
+    return items;
 }
 
 port_ptr RouteTable::getBestRoute(const List& list)

@@ -1,9 +1,9 @@
 #ifndef COMMANDS_H
 #define COMMANDS_H
 
-#include "sn_transport_manager.h"
-#include "sn_address_manager.h"
-#include "sn_port.h"
+#include "core/sn_transport_manager.h"
+#include "core/sn_address_manager.h"
+#include "core/sn_port.h"
 #include <boost/json.hpp>
 #include <tuple>
 
@@ -79,7 +79,10 @@ struct AddressConfigCmd : public Command
         Encoder(AddressConfigCmd* cmd){
            stream = "{\"method\":\"address_config\",\"transaction_id\":\""+cmd->id+"\",";
            stream+= "\"params\":{";
-           stream+= "\"address\":"+std::to_string(cmd->address);
+           stream+= "\"address\":"+std::to_string(cmd->address)+",";
+           stream += "\"transport\":{";
+           stream += "\"ip\":\""+cmd->ip+"\",";
+           stream += "\"port\":"+std::to_string(cmd->port)+"}";
            stream+= "}}"; 
         }
     };
@@ -93,9 +96,13 @@ struct AddressConfigCmd : public Command
         void decode(void* params)override{
             auto& jo = *static_cast<boost::json::object*>(params);
             try{
-                cmd->address = jo["address"].as_uint64();
+                cmd->address = jo["address"].as_int64();
+                auto tjo = jo["transport"].as_object();
+                cmd->ip = std::string(tjo["ip"].as_string().c_str());
+                cmd->port = tjo["port"].as_int64();
             }catch(std::invalid_argument& e){
                 cmd->address = 0;
+                cmd->port = 0;
             }
         }
         AddressConfigCmd* cmd;
@@ -110,6 +117,8 @@ struct AddressConfigCmd : public Command
     };
 
     uint64_t address;
+    std::string ip;
+    uint16_t port=0;
 };
 
 
@@ -157,7 +166,7 @@ struct AddressConfirmCmd : public Command
             try{
                 auto tjo = jo["transport"].as_object();
                 cmd->ip = std::string(tjo["ip"].as_string().c_str());
-                cmd->port = tjo["port"].as_uint64();
+                cmd->port = tjo["port"].as_int64();
             }catch(std::invalid_argument& e){
                 cmd->port=0;
             }

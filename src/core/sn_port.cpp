@@ -3,6 +3,7 @@
 #include "sn_port.h"
 #include "sn_transport.h"
 #include "sn_message.h"
+#include <iostream>
 
 namespace snode
 {
@@ -28,6 +29,7 @@ int Port::output(const void* data, size_t len)
 	if(_transport == nullptr)
 	{
         //log_error()<<"output failed, transport not initialized"<<log_end();
+        std::cout<<"output failed, transport not initialized\n";
 		return -1;
 	}
 
@@ -48,6 +50,7 @@ int Port::output(const Message& m)
 
 int Port::input(const Message &m)
 {
+    std::cout<<"port input size="<<m.size()<<std::endl; 
     if(this->_input_cb != nullptr)
     {
         this->_input_cb(this, m);

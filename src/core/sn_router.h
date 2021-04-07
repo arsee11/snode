@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <list>
 #include <algorithm>
+#include <iostream>
 
 namespace snode
 {
@@ -24,9 +25,6 @@ public:
 	{
 		//setup local port for RoutingMethod,
 		//receive route exchange msg from other routers.
-		//port_ptr port = _routing_method.port();
-		//addport(port);
-		//addRouting(local(), local(), 1, port);
 	}
 
 	int forward(const Message& msg){ 
@@ -44,13 +42,16 @@ public:
     ///@brief add static route item
     ///@param dst dst snode/node address
     ///@param mectric mectric of this route path
+    ///@param next_hop next snode for forwarding
     ///@param port the router's port for input/output
-    void  addRouting(const Address& dst, int metric, const port_ptr& port)
+    void  addRouting(const Address& dst, int metric,
+                     const Address& next_hop, const port_ptr& port
+    )
 	{
 
         auto i = std::find(_ports.begin(), _ports.end(), port);
         if(i != _ports.end() )
-            _route_table.add(dst, metric, port);
+            _route_table.add(dst, metric, next_hop, port);
 		else
             throw std::runtime_error("port not found!");
 	}
@@ -66,7 +67,7 @@ public:
 		_ports.push_back(port);
 	}
 
-    std::string toString()const;
+    const RouteTable& route_table()const{ return _route_table; }
 
 private:
     void onPortInput(Port* srcport, const Message& msg){
@@ -74,6 +75,8 @@ private:
 		if( forward(msg) <=0 )
 		{
 			//srcport->output(NotReachableMsg());
+            std::cout<<"No route for dst["<<std::hex<<msg.dst().raw()
+                     <<"] from src["<<msg.src().raw()<<std::dec<<"]\n";
 		}
 	}
 

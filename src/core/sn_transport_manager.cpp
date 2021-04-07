@@ -11,10 +11,18 @@ TransportManager::TransportManager()
    _thread.post(std::bind(&TransportManager::evtLoop, this));
 }
 
+void TransportManager::clear()
+{
+    _is_running = false;
+    _thread.stop();
+}
+
 void  TransportManager::evtLoop()
 {
     _evt_queue.process();
-   _thread.post(std::bind(&TransportManager::evtLoop, this));
+    if(_is_running){
+        _thread.post(std::bind(&TransportManager::evtLoop, this));
+    }
 }
 
 UdpTransport* TransportManager::getUdpTransport(const TransEndpoint& local)
@@ -25,5 +33,12 @@ UdpTransport* TransportManager::getUdpTransport(const TransEndpoint& local)
     return new UdpTransport(udp, local);
 }
 
+UdpTransport* TransportManager::getUdpTransport(const std::string& lip)
+{
+    UdpPeer * udp = new UdpPeer(&_evt_queue, TransEndpoint{lip, 0});
+    udp->open();
+
+    return new UdpTransport(udp, udp->local_addr());
+}
 
 }

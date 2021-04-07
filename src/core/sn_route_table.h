@@ -12,25 +12,25 @@ namespace snode
 
 struct RouteItem
 {
-    Address dst_snode_addr;
-	uint64_t mask;
-	int metric;
-	port_ptr port;
+    Address dst;        //destination snode/enode address
+	uint64_t mask;      //snode adderss mask
+	int metric;         //mectric of this route path
+    Address next_hop;   //next snode/enode for forwarding
+	port_ptr port;      //the router's port for input/output
 };
 
 class RouteTable
 {
 public:
     port_ptr routing(const Address&	dst);
+   
+    void add(const Address &dst,
+             int metric,
+             const Address& next_hop, 
+             const snode::port_ptr &port
+    );
 
-    ///@param dst_snode dst snode address, Address::en()==0
-    ///@param mectric mectric of this route path
-    ///@param port the router's port for input/output
-    void  add(const Address& dst_snode
-                     ,int metric
-                     ,const port_ptr& port);
-
-    std::string serialize()const;
+    std::vector<RouteItem> getAllItems()const;
 
 private:
     ///|dst|RouteItem|
