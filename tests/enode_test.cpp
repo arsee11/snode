@@ -143,7 +143,8 @@ void ENode::sendTo(const void* data, int len, const Address& peer)
 
 void onInput(const Message& msg)
 {
-	cout<<"recv msg("<<msg.size()<<") payload:"<<(char*)msg.payload()<<endl;
+	cout<<"recv msg from["<<msg.src().sn()<<","<<msg.src().en()
+        <<"] payload:"<<(char*)msg.payload()<<endl;
 }
 
 
@@ -173,15 +174,15 @@ int main(int argc, char* argv[])
     
 
     while(true){
-        cout<<"input [addr] [mesage]:";
-        uint32_t node_addr=-1;
+        cout<<"input [sn] [en] [mesage]:\n";
+        uint32_t snode_addr=-1;
+        uint32_t enode_addr=-1;
         std::string m;
-        cin>>node_addr>>m;
+        cin>>snode_addr>>enode_addr>>m;
 
-        uint32_t sn_addr = node.address().sn();
-        Address peer_addr(sn_addr, node_addr);
+        Address peer_addr(snode_addr, enode_addr);
         node.sendTo(m.c_str(), m.size(), peer_addr); 
-        cout<<"sent ["<<sn_addr<<","<<node_addr<<"] ["<<m<<"]\n";
+        cout<<"sent ["<<snode_addr<<","<<enode_addr<<"] ["<<m<<"]\n";
     }
 
     transm.clear();

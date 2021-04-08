@@ -15,13 +15,14 @@
 using namespace snode;
 
 #include <iostream>
+#include <fstream>
 using namespace std;
 using namespace std::placeholders;
 using RouterImpl=Router<RIPRouting, RouteTable>;
 
 RouterImpl router;
 TransportManager transportmgr;
-AddressManager addressmgr(Address(1u, 0u));
+AddressManager addressmgr(0u);
 CommandParser parser;
 
 std::string local_ip="127.0.0.1";
@@ -30,15 +31,11 @@ UdpPeer* service_trans=nullptr;
 struct Neighbour
 {
     Address addr;
-    TransEndpoint endpoint;
+    uint16_t lport; //local port
+    TransEndpoint rendpoint;//remote(the neighbour) endpoint
 };
 
 using NeighbourMap=std::list<Neighbour>; 
-NeighbourMap neighbours{
-    {Address(2u, 1u), {"192.168.127.185", 10011}}
-	
-};
-    
 
 struct Transaction
 {
@@ -173,34 +170,129 @@ void dumpRoute()
     cout<<s()<<endl;
 }
 
+void addStaticRoute(const Address& dst, int metric, const Address& next_hop)
+{
+    auto port = router.route_table().routing(next_hop);
+    if(port == nullptr){
+        std::cout<<"next_top["<<next_hop.sn()<<","<<next_hop.en()<<"] not reachable\n";
+        return;
+    }
+
+    router.addRouting(dst, metric, next_hop, port);
+}
+
+void configStaticRoute()
+{
+    std::ifstream fs("static_routes.conf");
+    if( !fs.good()){
+        std::cout<<"no static route configs\n";
+        return;
+    }
+
+    boost::json::error_code ec;
+    boost::json::stream_parser p;
+    std::string line;
+    while( std::getline( fs, line ) )
+    {
+        p.write( line, ec );
+        if( ec ){
+            std::cout<<"configs syntax error\n";
+            return ;
+        }
+    }
+
+    p.finish( ec );
+    if( ec ){
+        std::cout<<"configs syntax error\n";
+        return ;
+    }
+    auto jo = p.release().as_object();
+
+    auto ja = jo["routes"].as_array();
+    for(auto i : ja){
+        auto jneib = i.as_object();
+        uint32_t sn = jneib["sn"].as_int64();
+        uint32_t en = jneib["en"].as_int64();
+        uint32_t nsn = jneib["nsn"].as_int64();
+        uint32_t nen = jneib["nen"].as_int64();
+        uint32_t metric = jneib["metric"].as_int64();;
+        addStaticRoute(Address(sn,en), metric, Address(nsn,nen));
+    }
+}
+
 void setNeighbours(const NeighbourMap& ns)
 {
     for(auto& neib : ns){
-	    UdpTransport* udp = transportmgr.getUdpTransport(TransEndpoint{local_ip, 10010});
-        udp->remote_ep(neib.endpoint);
+	    UdpTransport* udp = transportmgr.getUdpTransport(TransEndpoint{local_ip, neib.lport});
+        udp->remote_ep(neib.rendpoint);
 
 	    port_ptr port = std::make_shared<Port>();
         port->setTransport(udp);
 	    router.addPort(port);
+        
+        Address neib_sn(neib.addr.sn(), 0u);
+	    router.addRouting(neib_sn, 1, neib.addr, port);
+    }
+}
 
-	    router.addRouting(neib.addr, 1, neib.addr, port);
+void readNeighbours(NeighbourMap& ns)
+{
+    std::ifstream fs("neighbours.conf");
+    if( !fs.good()){
+        std::cout<<"no neighbours configs\n";
+        return;
+    }
+
+    boost::json::error_code ec;
+    boost::json::stream_parser p;
+    std::string line;
+    while( std::getline( fs, line ) )
+    {
+        p.write( line, ec );
+        if( ec ){
+            std::cout<<"configs syntax error\n";
+            return ;
+        }
+    }
+
+    p.finish( ec );
+    if( ec ){
+        std::cout<<"configs syntax error\n";
+        return ;
+    }
+    auto jo = p.release().as_object();
+
+    auto ja = jo["neighbours"].as_array();
+    for(auto i : ja){
+        auto jneib = i.as_object();
+        uint32_t sn = jneib["sn"].as_int64();
+        uint32_t en = jneib["en"].as_int64();
+        uint16_t lport = jneib["lport"].as_int64();;
+        uint16_t rport = jneib["rport"].as_int64();;
+        std::string rip= jneib["rip"].as_string().c_str();
+        ns.push_back( {Address(sn, en), lport, {rip, rport}} );
     }
 }
 
 int main(int argc, char* argv[])
 {
-	if(argc != 3)
+	if(argc != 4)
 	{
-		cout<<"usage: [local ip] [local port]"<<endl;
+		cout<<"usage: [sn addr] [local ip] [local port]"<<endl;
 		return 0;
 	}
 
-	local_ip = argv[1];
-	uint16_t port= atoi(argv[2]);
+    addressmgr = AddressManager(atoi(argv[1]));
+	local_ip = argv[2];
+	uint16_t port= atoi(argv[3]);
     TransEndpoint service_ep{local_ip, port};
 
     init();
+
+    NeighbourMap neighbours;
+    readNeighbours(neighbours);
     setNeighbours(neighbours);
+    configStaticRoute();
 
     NetEventQueue eq;
     service_trans = new UdpPeer(&eq, service_ep);

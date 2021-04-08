@@ -41,10 +41,10 @@ public:
 
     ///@brief add static route item
     ///@param dst dst snode/node address
-    ///@param mectric mectric of this route path
+    ///@param metric mectric of this route path
     ///@param next_hop next snode for forwarding
     ///@param port the router's port for input/output
-    void  addRouting(const Address& dst, int metric,
+    void addRouting(const Address& dst, int metric,
                      const Address& next_hop, const port_ptr& port
     )
 	{

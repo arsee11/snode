@@ -14,7 +14,7 @@ struct RouteItem
 {
     Address dst;        //destination snode/enode address
 	uint64_t mask;      //snode adderss mask
-	int metric;         //mectric of this route path
+	int metric;         //metric of this route path
     Address next_hop;   //next snode/enode for forwarding
 	port_ptr port;      //the router's port for input/output
 };
@@ -22,7 +22,7 @@ struct RouteItem
 class RouteTable
 {
 public:
-    port_ptr routing(const Address&	dst);
+    port_ptr routing(const Address&	dst)const;
    
     void add(const Address &dst,
              int metric,
@@ -45,7 +45,7 @@ private:
     Table _routes;
 
 private:
-     port_ptr getBestRoute(const List& list);
+     port_ptr getBestRoute(const List& list)const;
 
 };
 

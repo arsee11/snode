@@ -5,7 +5,7 @@
 
 namespace snode{
 
-port_ptr snode::RouteTable::routing(const Address &dst)
+port_ptr snode::RouteTable::routing(const Address &dst)const
 {
     ///first match full address
     auto ilist = _routes.find(dst);
@@ -51,7 +51,7 @@ std::vector<RouteItem> RouteTable::getAllItems()const
     return items;
 }
 
-port_ptr RouteTable::getBestRoute(const List& list)
+port_ptr RouteTable::getBestRoute(const List& list)const
 {
     if(list.size() == 0){
         return nullptr;

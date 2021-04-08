@@ -5,9 +5,10 @@
 namespace snode
 {
 
-AddressManager::AddressManager(const Address& base)
-    :_base(base)
+AddressManager::AddressManager(uint32_t snaddr)
+    :_snaddr(snaddr)
 {
+    _bitset.set(0);//the first addr for this snode
 }
 
 Address AddressManager::allocAddress()
@@ -18,7 +19,7 @@ Address AddressManager::allocAddress()
 
     uint64_t en = getAddress();
 
-    return Address(_base.sn(), en);
+    return Address(_snaddr, en);
 }
 
 void AddressManager::releaseAddress(const Address& addr)
@@ -32,9 +33,9 @@ void AddressManager::releaseAddress(const Address& addr)
 }
 
 
-uint64_t AddressManager::getAddress()
+uint32_t AddressManager::getAddress()
 {
-    uint64_t addr=0;
+    uint32_t addr=0;
     for(size_t i=0; i<_bitset.size(); i++){
         if( !_bitset.test(i) ){
             addr = i+1;
@@ -46,7 +47,7 @@ uint64_t AddressManager::getAddress()
     return addr;
 }
 
-uint64_t AddressManager::getTotalAlloced()
+uint32_t AddressManager::getTotalAlloced()
 {
     return _bitset.count();
 }

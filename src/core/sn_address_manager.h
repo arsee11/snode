@@ -19,20 +19,20 @@ struct AddressFullException
 
 class AddressManager
 {
-    static constexpr uint64_t MAX=1024;
+    static constexpr uint32_t MAX=1024;
 
 public:
-    AddressManager(const Address& base);
+    AddressManager(uint32_t snaddr);
 
     Address allocAddress();
     void releaseAddress(const Address& addr);
 
 private:
-    uint64_t getAddress();
-    uint64_t getTotalAlloced();
+    uint32_t getAddress();
+    uint32_t getTotalAlloced();
 
 private:
-    Address _base;
+    uint32_t _snaddr;
     std::bitset<MAX> _bitset;
 };
 
