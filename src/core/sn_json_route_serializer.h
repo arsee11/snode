@@ -1,5 +1,9 @@
+///sn_json_route_serializer.h
+
 #ifndef SN_JSON_SERIALIZER_H
 #define SN_JSON_SERIALIZER_H
+
+#include <string>
 
 namespace snode
 {
@@ -20,7 +24,7 @@ public:
         if(_router != nullptr){
             auto items = _router->route_table().getAllItems();
             for(size_t i=0; i<items.size(); i++){
-                const RouteItem& item = items[i];
+                const auto& item = items[i];
                 std::string dst = address_s(item.dst);
                 std::string mask = std::to_string(item.mask);
                 std::string m = std::to_string(item.metric);

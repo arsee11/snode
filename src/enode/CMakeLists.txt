@@ -1,11 +1,10 @@
 
-project(snode-sn LANGUAGES CXX)
+project(enode LANGUAGES CXX)
 
 set(SRCS 
 sn_command_session.cpp
-sn_snode.cpp
-sn_snode_impl.cpp
-sn_neighbor.cpp
+sn_enode.cpp
+sn_enode_impl.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${SRCS})

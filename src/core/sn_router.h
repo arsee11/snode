@@ -4,6 +4,7 @@
 #define SN_ROUTER_H
 
 #include "sn_port.h"
+#include "sn_message.h"
 #include <memory>
 #include <assert.h>
 #include <list>
@@ -21,7 +22,7 @@ class Router
 {
 public:
 	Router()
-        //:_routing_method(&_route_table, this)
+        :_routing_method(&_route_table)
 	{
 		//setup local port for RoutingMethod,
 		//receive route exchange msg from other routers.
@@ -68,6 +69,7 @@ public:
 	}
 
     const RouteTable& route_table()const{ return _route_table; }
+    RoutingMethod* routing_method(){ return &_routing_method; }
 
 private:
     void onPortInput(Port* srcport, const Message& msg){

@@ -19,6 +19,7 @@ public:
     //virtual bool close()=0;
     virtual TransEndpoint local_ep()const=0;
     virtual TransEndpoint remote_ep()const=0;
+    virtual void remote_ep(const TransEndpoint& ep)=0;
     virtual int send(const void* data, int size)=0;
     void listenOnRecv(RecvCb cb){ _recv_cb = cb; }
 

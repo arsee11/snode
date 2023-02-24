@@ -40,6 +40,7 @@ protected:
     OnInputCb _input_cb=nullptr;
 };
 
+using port_ptr = std::shared_ptr<Port>;
 
 }//snode
 

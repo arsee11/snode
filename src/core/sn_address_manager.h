@@ -22,6 +22,7 @@ class AddressManager
     static constexpr uint32_t MAX=1024;
 
 public:
+    AddressManager()=default;
     AddressManager(uint32_t snaddr);
 
     Address allocAddress();
