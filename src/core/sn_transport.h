@@ -15,6 +15,8 @@ class Transport
 {
     using RecvCb = std::function<void(const void* data, int size)>;
 public:
+    virtual ~Transport()=default;
+
     //virtual bool open()=0;
     //virtual bool close()=0;
     virtual TransEndpoint local_ep()const=0;
@@ -27,13 +29,28 @@ protected:
     RecvCb _recv_cb;
 };
 
+using trans_ptr = std::shared_ptr<Transport>;
 
+//////////////////////////////////////////////////////////////////////////
+class TransportServer
+{
+    using OnConnectedCb = std::function<void(trans_ptr)>;
+public:
+    virtual ~TransportServer()=default;
+    virtual TransEndpoint local_ep()const=0;
+    virtual bool open()=0;
+    void listenOnConnect(OnConnectedCb cb){ _conn_cb = cb; }
+
+protected:
+    OnConnectedCb _conn_cb;
+};
 
 
 //////////////////////////////////////////////////////////////////////////
 class NetTransport : public Transport
 {
 public:
+    NetTransport()=default;
     NetTransport(const TransEndpoint& local)
         :_local_ep(local)
     {

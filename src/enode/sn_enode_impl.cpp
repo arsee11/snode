@@ -10,7 +10,8 @@ namespace snode {
 ENodeImpl::ENodeImpl(const std::string& lip)
     :_local_ip(lip)
 {
-
+    _transportmgr.reset(new TransportManager());
+    _cmd_session.reset( new enode::CommandSession(this, _transportmgr.get()));
 }
 
 void ENodeImpl::listenOnRecv(RecvCb cb)
@@ -26,13 +27,17 @@ void ENodeImpl::connect(const TransEndpoint& snode_ep, ConnectCb cb)
     }
 }
 
-void ENodeImpl::sendTo(const void* data, int len, const Address& peer)
+int ENodeImpl::sendTo(const void* data, int len, const Address& peer)
 {
+    if( _data_transport == nullptr){
+        std::cout<<"Not connect to any SNode yet."<<std::endl;
+        return 0;
+    }
     Message msg(_addr, peer, data, len);
     uint8_t* buf=nullptr;
     size_t size=0;
     std::tie(buf, size) = msg.encode();
-    _data_transport->send(buf, size);
+    return _data_transport->send(buf, size);
 }
 
 TransEndpoint ENodeImpl::configAddress(const Address &addr, const TransEndpoint& remote_ep)
@@ -57,6 +62,7 @@ TransEndpoint ENodeImpl::configAddress(const Address &addr, const TransEndpoint&
             //log not my message
         }
     });
+    _addr = addr;
 
      auto localep = _data_transport->local_ep();
      if(_conn_cb != nullptr){

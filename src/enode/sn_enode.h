@@ -20,7 +20,7 @@ public:
     virtual ~ENode()=default;
     virtual void listenOnRecv(RecvCb cb)=0;
     virtual void connect(const TransEndpoint& snode_ep, ConnectCb cb)=0;
-    virtual void sendTo(const void* data, int len, const Address& peer)=0;
+    virtual int sendTo(const void* data, int len, const Address& peer)=0;
     virtual Address address()const=0;
     virtual TransEndpoint configAddress(const Address& addr, const TransEndpoint &remote_ep)=0;
 };

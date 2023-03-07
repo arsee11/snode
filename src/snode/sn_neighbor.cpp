@@ -32,15 +32,20 @@ void readNeighbors(snode::NeighborMap &ns)
     }
     auto jo = p.release().as_object();
 
-    auto ja = jo["Neighbors"].as_array();
-    for(auto i : ja){
-        auto jneib = i.as_object();
-        uint32_t sn = jneib["sn"].as_int64();
-        uint32_t en = jneib["en"].as_int64();
-        uint16_t lport = jneib["lport"].as_int64();;
-        uint16_t rport = jneib["rport"].as_int64();;
-        std::string rip= jneib["rip"].as_string().c_str();
-        ns.push_back( {Address(sn, en), lport, {rip, rport}} );
+    try {
+        auto j = jo["neighbors"];
+        auto ja = jo["neighbors"].as_array();
+        for(auto i : ja){
+            auto jneib = i.as_object();
+            uint32_t sn = jneib["sn"].as_int64();
+            uint32_t en = jneib["en"].as_int64();
+            uint16_t lport = jneib["lport"].as_int64();;
+            uint16_t rport = jneib["rport"].as_int64();;
+            std::string rip= jneib["rip"].as_string().c_str();
+            ns.push_back( {Address(sn, en), lport, {rip, rport}} );
+        }
+    } catch (std::exception& e) {
+        std::cout<<"parse neighbors.conf failed:"<<e.what()<<std::endl;
     }
 }
 

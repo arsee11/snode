@@ -7,6 +7,7 @@
 
 using std::placeholders::_1;
 using std::placeholders::_2;
+using std::placeholders::_3;
 
 namespace snode {
 
@@ -19,8 +20,8 @@ CommandSession::CommandSession(RouterImpl *router,
     ,_addressmgr(addressmgr)
     ,_transportmgr(transportmgr)
 {
-    _cmd_transport = _transportmgr->getUdpTransport(ep);
-    _cmd_transport->listenOnRecv(std::bind(&CommandSession::onRecvCmd, this, _1, _2));
+    _cmd_transport_server = _transportmgr->getUdpTransportServer(ep);
+    _cmd_transport_server->listenOnConnect(std::bind(&CommandSession::onNewConnect, this, _1));
 
     _cmd_parser.setDispatcher(
         CmdDispatcher<RegisterCmd>{std::bind(&CommandSession::onRegister, this, _1)}
@@ -36,18 +37,31 @@ CommandSession::CommandSession(RouterImpl *router,
     );    
 }
 
-void CommandSession::onRecvCmd(const void *data, int size)
+void CommandSession::onNewConnect(const trans_ptr& conn)
 {
-    std::cout<<"Recv cmd:";
+    conn->listenOnRecv([this, conn](const void* data, int size){
+        this->onRecvCmd(data, size, conn);
+    });
+
+    _cmd_transports.push_back(conn);
+}
+
+void CommandSession::onRecvCmd(const void *data, int size, trans_ptr t)
+{
+    std::cout<<"Recv cmd from["<<t->remote_ep().ip<<":"<<t->remote_ep().port<<"]:";
     std::cout<<(const char*)data<<endl;
 
     cmd_ptr req = std::move(_cmd_parser.parse((const char*)data, size));
+    if(req == nullptr){
+        return;
+    }
     cmd_ptr rsp = req->dispatch();
 
     if(rsp != nullptr){
         CommandEncoder* cmde = rsp->encoder();
-        _cmd_transport->send(cmde->buf(), cmde->size());
-        std::cout<<"send rsp:"<<(const char*)cmde->buf()<<endl;
+        t->send(cmde->buf(), cmde->size());
+        std::cout<<"send rsp to["<<t->remote_ep().ip<<":"<<t->remote_ep().port<<"]:";
+        std::cout<<(const char*)cmde->buf()<<endl;
     }
 }
 
@@ -96,7 +110,7 @@ cmd_ptr CommandSession::onRegister(Command* req)
     rtransaction->router = _router;
     rtransaction->addressmgr = _addressmgr;
 
-    Transport* udp = _transportmgr->getUdpTransport(_cmd_transport->local_ep().ip);
+    Transport* udp = _transportmgr->getUdpTransport(_cmd_transport_server->local_ep().ip);
 
     Address addr = _addressmgr->allocAddress();
 	port_ptr port = std::make_shared<Port>();
@@ -105,7 +119,7 @@ cmd_ptr CommandSession::onRegister(Command* req)
     AddressConfigCmd* cmd = new AddressConfigCmd;
     cmd->id = req->id;
     cmd->address = addr.raw();
-    cmd->ip = _cmd_transport->local_ep().ip;
+    cmd->ip = _cmd_transport_server->local_ep().ip;
     cmd->port = udp->local_ep().port;
 
     rtransaction->addressAssigned(port, addr);

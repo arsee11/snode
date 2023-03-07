@@ -15,7 +15,9 @@ class CommandSession;
 class SnodeImpl : public Snode
 {
 public:
-    SnodeImpl(RouterImpl* router);
+    SnodeImpl(RouterImpl* router,
+              AddressManager* addressmgr,
+              TransportManager* transportmgr);
     virtual ~SnodeImpl(){}
     void setAddress(const Address& addr)override;
     bool setupCommandTransport(const std::string& local_ip, int local_port)override;
@@ -25,9 +27,9 @@ public:
 
 protected:
     RouterImpl* _router=nullptr;
-    AddressManager _addressmgr;
+    AddressManager* _addressmgr;
+    TransportManager* _transportmgr;
     Address _address;
-    TransportManager _transportmgr;
     std::string _local_forward_ip;
     std::string _local_cmd_ip;
     int _local_cmd_port=0;

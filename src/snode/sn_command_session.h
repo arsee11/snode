@@ -39,8 +39,11 @@ public:
     );
 
 protected:
-    Transport* _cmd_transport;
-    void onRecvCmd(const void* data, int size);
+    TransportServer* _cmd_transport_server;
+    std::list<trans_ptr> _cmd_transports;
+
+    void onNewConnect(const trans_ptr &conn);
+    void onRecvCmd(const void* data, int size, trans_ptr t);
 
 private:
     cmd_ptr onRegister(Command* req);

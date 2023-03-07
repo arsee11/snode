@@ -15,9 +15,7 @@ using namespace std;
 using namespace std::placeholders;
 
 TransportManager transportmgr;
-AddressManager addressmgr(0u);
 RouterImpl router;
-SnodeImpl sn(&router);;
 
 std::string local_ip="127.0.0.1";
 
@@ -28,7 +26,7 @@ void dumpRoute()
     cout<<s()<<endl;
 }
 
-void configStaticRoute()
+void configStaticRoute(Snode* sn)
 {
     std::ifstream fs("static_routes.conf");
     if( !fs.good()){
@@ -63,14 +61,14 @@ void configStaticRoute()
         uint32_t nsn = jneib["nsn"].as_int64();
         uint32_t nen = jneib["nen"].as_int64();
         uint32_t metric = jneib["metric"].as_int64();;
-        sn.addStaticRoute(Address(snaddr,en), metric, Address(nsn,nen));
+        sn->addStaticRoute(Address(snaddr,en), metric, Address(nsn,nen));
     }
 }
 
-void setNeighbors(const NeighborMap& ns)
+void setNeighbors(Snode* sn, const NeighborMap& ns)
 {
     for(auto& neib : ns){
-		sn.setNeighbor(neib);
+		sn->setNeighbor(neib);
     }
 }
 
@@ -83,15 +81,16 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
-    addressmgr = AddressManager(atoi(argv[1]));
+	AddressManager addressmgr = AddressManager(atoi(argv[1]));
+	SnodeImpl sn(&router, &addressmgr, &transportmgr);
 	local_ip = argv[2];
 	uint16_t port= atoi(argv[3]);
     TransEndpoint service_ep{local_ip, port};
 
     NeighborMap neighbours;
     readNeighbors(neighbours);
-    setNeighbors(neighbours);
-    configStaticRoute();
+    setNeighbors(&sn, neighbours);
+    configStaticRoute(&sn);
 
 	CommandSession cmd_sess(&router,
 			&addressmgr,

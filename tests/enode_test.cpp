@@ -47,8 +47,8 @@ int main(int argc, char* argv[])
         cin>>snode_addr>>enode_addr>>m;
 
         Address peer_addr(snode_addr, enode_addr);
-        node.sendTo(m.c_str(), m.size(), peer_addr); 
-        cout<<"sent ["<<snode_addr<<","<<enode_addr<<"] ["<<m<<"]\n";
+        int n = node.sendTo(m.c_str(), m.size(), peer_addr); 
+        cout<<"send to ["<<snode_addr<<":"<<enode_addr<<","<<m<<"],"<<n<<" bytes.\n";
     }
 
 	return 0;

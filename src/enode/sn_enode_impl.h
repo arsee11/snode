@@ -18,7 +18,7 @@ public:
     ENodeImpl(const std::string& lip);
     void listenOnRecv(RecvCb cb)override;
     void connect(const TransEndpoint& snode_ep, ConnectCb cb)override;
-    void sendTo(const void* data, int len, const Address& peer)override;
+    int sendTo(const void* data, int len, const Address& peer)override;
     Address address()const override{ return _addr; }
     TransEndpoint configAddress(const Address &addr, const TransEndpoint &remote_ep)override;
 
@@ -28,8 +28,8 @@ private:
     Address _addr;
     std::string _local_ip;
     std::unique_ptr<NetTransport> _data_transport;
-    enode::CommandSession* _cmd_session;
-    TransportManager* _transportmgr;
+    std::unique_ptr<enode::CommandSession> _cmd_session;
+    std::unique_ptr<TransportManager> _transportmgr;
 };
 
 }//namespace snode

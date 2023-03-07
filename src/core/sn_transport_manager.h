@@ -14,6 +14,7 @@ public:
     void clear();
     UdpTransport* getUdpTransport(const TransEndpoint& local);
     UdpTransport* getUdpTransport(const std::string& lip);
+    TransportServer* getUdpTransportServer(const TransEndpoint& local);
 
 private:
     void evtLoop();

@@ -1,6 +1,6 @@
 g++ -Wall -o snode -g snode_test.cpp \
     -I../src -I /home/arsee/gits/ \
-    -L../lib -lsnode-sn -lsnode-core -lboost_json -lpthread
+    -L../lib -lsnode-sn -lsnode-core -lsnode-cmd -lboost_json -lpthread
 
 #DIR=/home/arsee/tools/gcc-arm-10.2-2020.11-x86_64-aarch64-none-linux-gnu/bin
 #${DIR}/aarch64-none-linux-gnu-g++ -o snode_aarch64 -std=c++17 -g snode_test.cpp \

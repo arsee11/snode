@@ -36,14 +36,14 @@ bool CommandSession::open(const TransEndpoint& local_ep, const TransEndpoint& sn
         return false;
     }
 
-    int id=0;
     RegisterCmd req;
-    req.id = std::to_string(id);
+    req.id = Command::genId();
     auto cmde = req.encoder();
     cout<<"send cmd:"<<(const char*)cmde->buf()<<endl;
     _cmd_transport->send(cmde->buf(), cmde->size());
 
     //TODO:handle errors
+    return true;
 }
 
 void CommandSession::onRecvCmd(const void *data, int size)
@@ -52,6 +52,9 @@ void CommandSession::onRecvCmd(const void *data, int size)
     std::cout<<(const char*)data<<endl;
 
     cmd_ptr req = std::move(_cmd_parser.parse((const char*)data, size));
+    if(req == nullptr){
+        return;
+    }
     cmd_ptr rsp = req->dispatch();
 
     if(rsp != nullptr){

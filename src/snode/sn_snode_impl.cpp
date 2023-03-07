@@ -4,15 +4,18 @@
 
 namespace snode {
 
-SnodeImpl::SnodeImpl(RouterImpl *router)
+SnodeImpl::SnodeImpl(RouterImpl *router,
+                     AddressManager* addressmgr,
+                     TransportManager *transportmgr)
     :_router(router)
+    ,_addressmgr(addressmgr)
+    ,_transportmgr(transportmgr)
 {
 }
 
 void SnodeImpl::setAddress(const Address& addr)
 {
     _address = addr;
-    _addressmgr = AddressManager(addr.sn());
 }
 
 bool SnodeImpl::setupCommandTransport(
@@ -21,11 +24,12 @@ bool SnodeImpl::setupCommandTransport(
 {
     _local_cmd_ip = local_ip;
     _local_cmd_port = local_port;
+    return true;
 }
 
 void SnodeImpl::setNeighbor(const Neighbor& neib)
 {
-    UdpTransport* udp = _transportmgr.getUdpTransport(
+    UdpTransport* udp = _transportmgr->getUdpTransport(
             TransEndpoint{_local_forward_ip, neib.lport}
     );
     udp->remote_ep(neib.rendpoint);
@@ -53,11 +57,13 @@ void SnodeImpl::addStaticRoute(
 
 Address SnodeImpl::directlyRegister(Transport* trans)
 {
-    Address addr = _addressmgr.allocAddress();
+    Address addr = _addressmgr->allocAddress();
 	port_ptr port = std::make_shared<Port>();
     port->setTransport(trans);
     _router->addPort(port);
     _router->addRouting(addr, 1, addr, port);
+
+    return addr;
 }
 
 }//namespace snode
