@@ -48,7 +48,7 @@ void SnodeImpl::addStaticRoute(
 {
     auto port = _router->route_table().routing(next_hop);
     if(port == nullptr){
-        std::cout<<"next_top["<<next_hop.sn()<<","<<next_hop.en()<<"] not reachable\n";
+        std::cout<<"Inavild route: next_top["<<next_hop.sn()<<","<<next_hop.en()<<"] not reachable\n";
         return;
     }
 

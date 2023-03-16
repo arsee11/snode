@@ -20,14 +20,14 @@ void readNeighbors(snode::NeighborMap &ns)
     {
         p.write( line, ec );
         if( ec ){
-            std::cout<<"configs syntax error\n";
+            std::cout<<"neighbors.conf configs syntax error\n";
             return ;
         }
     }
 
     p.finish( ec );
     if( ec ){
-        std::cout<<"configs syntax error\n";
+        std::cout<<"neighbors.conf configs syntax error\n";
         return ;
     }
     auto jo = p.release().as_object();

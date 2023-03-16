@@ -5,6 +5,7 @@
 #define COMMANDS_H
 
 #include <boost/json.hpp>
+#include <memory>
 #include <tuple>
 
 class CommandEncoder

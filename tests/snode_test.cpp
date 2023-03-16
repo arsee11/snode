@@ -60,7 +60,7 @@ void configStaticRoute(Snode* sn)
         uint32_t en = jneib["en"].as_int64();
         uint32_t nsn = jneib["nsn"].as_int64();
         uint32_t nen = jneib["nen"].as_int64();
-        uint32_t metric = jneib["metric"].as_int64();;
+        uint32_t metric = jneib["metric"].as_int64();
         sn->addStaticRoute(Address(snaddr,en), metric, Address(nsn,nen));
     }
 }
