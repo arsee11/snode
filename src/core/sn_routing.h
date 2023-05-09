@@ -14,6 +14,7 @@ struct RoutingInfo
         Address dst;        //destination snode/enode address
 	    uint64_t mask;      //snode adderss mask
 	    int metric;         //metric of this route path
+        Address next_hop;         
     };
 
     std::vector<Item> items;
@@ -23,7 +24,7 @@ class RoutingMethod
 {
 public:
     virtual ~RoutingMethod(){}
-    virtual void updateRouting(const Address& from, const RoutingInfo& info)=0;
+    virtual void onRecvMsg(const uint8_t* msg, size_t size)=0;
 };
 
 }//namespace snode

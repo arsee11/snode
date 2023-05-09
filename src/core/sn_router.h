@@ -5,11 +5,7 @@
 
 #include "sn_port.h"
 #include "sn_message.h"
-#include <memory>
-#include <assert.h>
-#include <list>
-#include <algorithm>
-#include <iostream>
+#include <map>
 
 namespace snode
 {
@@ -17,20 +13,35 @@ class Address;
 
 using port_ptr = std::shared_ptr<Port>;
 
-template<class RoutingMethod, class RouteTable>
+/// @brief 
 class Router
 {
 public:
-	Router()
-        :_routing_method(&_route_table)
-	{
-		//setup local port for RoutingMethod,
-		//receive route exchange msg from other routers.
-	}
+    Router() =default;
 
+    virtual void addDirectLink(const Address& next_hop, const port_ptr& port)=0;
+
+protected:
+    void addPort(const Address& next_hop, const port_ptr& port);
+    port_ptr findPort(const Address& next_hop);
+    void onPortInput(Port* srcport, const Message& msg);
+    virtual void onLinkUpdate(const Message& msg)=0;
+
+    ///Binding the next hop addresses and ports
+    std::map<Address, port_ptr> _ports;
+};
+
+
+/// @brief 
+/// @tparam RouteTable 
+template<class RouteTable>
+class RouterT : public Router
+{
+public:
+	RouterT()=default;
 	int forward(const Message& msg){ 
-		
-        port_ptr port = _route_table.routing(msg.dst());
+			
+		port_ptr port = _route_table.routing(msg.dst());
 		if(port != nullptr)
 			return port->output(msg);
 		
@@ -38,54 +49,12 @@ public:
 		return 0;
 	}
 
-	bool start();
-
-    ///@brief add static route item
-    ///@param dst dst snode/node address
-    ///@param metric mectric of this route path
-    ///@param next_hop next snode for forwarding
-    ///@param port the router's port for input/output
-    void addRouting(const Address& dst, int metric,
-                     const Address& next_hop, const port_ptr& port
-    )
-	{
-
-        auto i = std::find(_ports.begin(), _ports.end(), port);
-        if(i != _ports.end() )
-            _route_table.add(dst, metric, next_hop, port);
-		else
-            throw std::runtime_error("port not found!");
-	}
-
-	void addPort(const port_ptr& port){
-
-		assert(port.get());
-        port->setInputCallBack([this](Port* srcport, const Message& msg)
-			{ 
-				this->onPortInput(srcport, msg); 
-			});
-	
-		_ports.push_back(port);
-	}
-
     const RouteTable& route_table()const{ return _route_table; }
-    RoutingMethod* routing_method(){ return &_routing_method; }
 
-private:
-    void onPortInput(Port* srcport, const Message& msg){
-
-		if( forward(msg) <=0 )
-		{
-			//srcport->output(NotReachableMsg());
-            std::cout<<"No route for dst["<<std::hex<<msg.dst().raw()
-                     <<"] from src["<<msg.src().raw()<<std::dec<<"]\n";
-		}
-	}
-
-	RoutingMethod  _routing_method;
+protected:
 	RouteTable _route_table;
-    std::list<port_ptr> _ports;
 };
+
 
 }
 

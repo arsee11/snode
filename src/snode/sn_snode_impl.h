@@ -21,7 +21,7 @@ public:
     virtual ~SnodeImpl(){}
     void setAddress(const Address& addr)override;
     bool setupCommandTransport(const std::string& local_ip, int local_port)override;
-    void setNeighbor(const Neighbor& neib)override;
+    void addNeighbor(const Neighbor& neib)override;
     void addStaticRoute(const Address& dst, int metric, const Address& next_hop)override;
     Address directlyRegister(Transport* trans)override;
 
@@ -33,6 +33,7 @@ protected:
     std::string _local_forward_ip;
     std::string _local_cmd_ip;
     int _local_cmd_port=0;
+    std::list<Neighbor> _neighbors;
 };
 
 

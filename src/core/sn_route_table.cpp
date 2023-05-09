@@ -5,7 +5,7 @@
 
 namespace snode{
 
-port_ptr snode::RouteTable::routing(const Address &dst)const
+port_ptr RouteTable::routing(const Address &dst)const
 {
     ///first match full address
     auto ilist = _routes.find(dst);

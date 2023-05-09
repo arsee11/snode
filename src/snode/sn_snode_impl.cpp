@@ -27,7 +27,7 @@ bool SnodeImpl::setupCommandTransport(
     return true;
 }
 
-void SnodeImpl::setNeighbor(const Neighbor& neib)
+void SnodeImpl::addNeighbor(const Neighbor& neib)
 {
     UdpTransport* udp = _transportmgr->getUdpTransport(
             TransEndpoint{_local_forward_ip, neib.lport}
@@ -36,10 +36,11 @@ void SnodeImpl::setNeighbor(const Neighbor& neib)
 
     port_ptr port = std::make_shared<Port>();
     port->setTransport(udp);
-    _router->addPort(port);
+    _router->addPort(neib.addr, port);
     
     Address neib_sn(neib.addr.sn(), 0u);
-    _router->addRouting(neib_sn, 1, neib.addr, port);
+    _router->addDRouting(neib_sn, 1, neib.addr, port);
+    _neighbors.push_back(neib);
 }
 
 void SnodeImpl::addStaticRoute(

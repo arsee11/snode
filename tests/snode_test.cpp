@@ -68,7 +68,7 @@ void configStaticRoute(Snode* sn)
 void setNeighbors(Snode* sn, const NeighborMap& ns)
 {
     for(auto& neib : ns){
-		sn->setNeighbor(neib);
+		sn->addNeighbor(neib);
     }
 }
 
