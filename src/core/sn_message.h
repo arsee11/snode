@@ -12,6 +12,15 @@ namespace snode
 
 class Message 
 {
+    enum{
+        UnknownMsg=-1,
+        NormalMsg=0,
+        LinkUpdateMsg
+    };
+public:
+    static bool is_link_update_message(const Message& msg);
+    static const Message& create_link_update_message(const Address& src, const Address& dst, const void *payload, size_t size);
+
 public:
     Message(){}
 
@@ -21,10 +30,13 @@ public:
     }
 
     Message(const Address& src, const Address& dst, const void *payload, size_t size);
+    Message(const Address& src, const Address& dst, uint8_t payload_type, const void *payload, size_t size);
 
     const Address& src()const{ return _header.src; }
     const Address& dst()const{ return _header.dst; }
     uint8_t* payload()const{ return _payload; }
+    uint8_t payload_type()const{ return _header.payload_type; }
+
     size_t payload_size()const{ return this->size() - header_size(); }
 
     //total bytes of this message
@@ -42,6 +54,7 @@ public:
 private:
     size_t header_size()const{ return sizeof(_header.start_flag)
                          +sizeof(_header.length)
+                         +sizeof(_header.payload_type)
                          +_header.src.size()
                          +_header.dst.size();}
 
@@ -49,6 +62,7 @@ private:
     struct Header{
         uint32_t start_flag=0xffffffff; //start flag 0xffffffff
         uint32_t length=0;              //total length of the message inlcude header and palyload
+        uint8_t payload_type=NormalMsg;
         Address src;                    //address of the sender
         Address dst;                    //address of the receiver
     };

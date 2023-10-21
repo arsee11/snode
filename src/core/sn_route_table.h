@@ -19,18 +19,21 @@ struct RouteItem
 	port_ptr port;      //the router's port for input/output
 };
 
+using routeitem_ptr = std::shared_ptr<RouteItem>;
+
 class RouteTable
 {
 public:
     port_ptr routing(const Address&	dst)const;
-   
+    routeitem_ptr find_best_by_dst(const Address& dst)const;
+
     void add(const Address &dst,
              int metric,
              const Address& next_hop, 
              const snode::port_ptr &port
     );
 
-    std::vector<RouteItem> getAllItems()const;
+    std::vector<routeitem_ptr> getAllItems()const;
 
 private:
     ///|dst|RouteItem|
@@ -38,14 +41,16 @@ private:
     ///|   |item2     |
     ///|2  |item1     |
     ///|   |item2     |
-    using List = std::list<RouteItem>;
+    using List = std::list<routeitem_ptr>;
     ///@key dst snode address
     ///@value RouteItem
     using Table = std::unordered_map<Address, List, AddressHash>;
     Table _routes;
 
 private:
-     port_ptr getBestRoute(const List& list)const;
+    List find_dst(const Address& dst)const;
+    routeitem_ptr getBestItem(const List& l)const;
+    port_ptr getBestRoute(const List& list)const;
 
 };
 

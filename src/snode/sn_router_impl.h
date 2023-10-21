@@ -19,20 +19,16 @@ public:
     ///@param dst dst snode/node address
     ///@param metric mectric of this route path
     ///@param next_hop next snode for forwarding
-    ///@param port the router's port for input/output
     void addRouting(const Address& dst, int metric,
-                    const Address& next_hop, const port_ptr& port);
+                    const Address& next_hop);
 
     void addDirectLink(const Address& next_hop, const port_ptr& port)override;
 
 
 protected:
     void onLinkUpdate(const Message& msg)override;
-    void onNewEntries(const RoutingInfo& info);
-    void onUpdateEntries(const RoutingInfo &info);
-    void onDisableEntries(const RoutingInfo& info);
-    void onEnableEntries(const RoutingInfo& info);
-    void onDelEntries(const RoutingInfo& info);
+    void onLinkUpdateMessageReady(const Address& to, const uint8_t *msg_buf, size_t size);
+    void requirePort(routeitem_ptr item);
 
 protected:
     RoutingMethod* _routing_method;

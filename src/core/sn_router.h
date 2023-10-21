@@ -20,12 +20,13 @@ public:
     Router() =default;
 
     virtual void addDirectLink(const Address& next_hop, const port_ptr& port)=0;
-
-protected:
     void addPort(const Address& next_hop, const port_ptr& port);
     port_ptr findPort(const Address& next_hop);
+
+protected:
     void onPortInput(Port* srcport, const Message& msg);
     virtual void onLinkUpdate(const Message& msg)=0;
+    virtual int forward(const Message& msg)=0;
 
     ///Binding the next hop addresses and ports
     std::map<Address, port_ptr> _ports;
@@ -39,13 +40,13 @@ class RouterT : public Router
 {
 public:
 	RouterT()=default;
-	int forward(const Message& msg){ 
+	int forward(const Message& msg)override{ 
 			
 		port_ptr port = _route_table.routing(msg.dst());
 		if(port != nullptr)
 			return port->output(msg);
 		
-		//log 
+		//log(w)<<"not route found for dst:"<<msg.dst;
 		return 0;
 	}
 

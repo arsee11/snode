@@ -23,8 +23,11 @@ public:
     bool setupCommandTransport(const std::string& local_ip, int local_port)override;
     void addNeighbor(const Neighbor& neib)override;
     void addStaticRoute(const Address& dst, int metric, const Address& next_hop)override;
-    Address directlyRegister(Transport* trans)override;
-
+    void addNeighbor(Address addr, port_ptr port, const TransEndpoint& remote_ep)override;
+    port_ptr newPort()override;
+    Address allocAddress()override;
+    void releaseAddress(const Address& addr)override;
+    
 protected:
     RouterImpl* _router=nullptr;
     AddressManager* _addressmgr;

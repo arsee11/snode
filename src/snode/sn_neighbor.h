@@ -7,19 +7,14 @@
 #include <boost/json.hpp>
 #include "core/sn_address.h"
 #include "core/sn_transport.h"
+#include "core/sn_routing.h"
 
 namespace snode {
-
-struct Neighbor
-{
-    Address addr;           //remote (the Neighbor)'s Address
-    uint16_t lport;         //local endpoint port
-    TransEndpoint rendpoint;//remote(the Neighbor)'s endpoint
-};
 
 using NeighborMap=std::list<Neighbor>;
 
 void readNeighbors(NeighborMap& ns);
+
 
 }//namespace snode
 

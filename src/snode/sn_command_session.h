@@ -32,7 +32,7 @@ class CommandSession
 {
 public:
     CommandSession(
-        RouterImpl* router,
+        Snode *snoder,
         AddressManager* addressmgr,
         TransportManager* transportmgr,
         const TransEndpoint& ep
@@ -53,7 +53,7 @@ private:
 
     std::map<std::string, transaction_ptr> _transaction_map;
     CommandParser _cmd_parser;
-    RouterImpl* _router;
+    Snode* _snode;
     AddressManager* _addressmgr;
     TransportManager* _transportmgr;
 };

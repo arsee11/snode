@@ -18,7 +18,7 @@ set(CMAKE_CXX_FLAGS " -fPIC -g ${CMAKE_CXX_FLAGS}")
 
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/src)
-include_directories(../)
+include_directories(${PROJECT_SOURCE_DIR}/../)
 
 add_subdirectory(src)
 

@@ -12,7 +12,7 @@
 namespace snode
 {
 
-void Router::addPort(const Address &next_hop, const port_ptr& port)
+void Router:: addPort(const Address &next_hop, const port_ptr& port)
 {
     assert(port.get());
 	port->setInputCallBack([this](Port* srcport, const Message& msg)
@@ -31,7 +31,7 @@ port_ptr Router::findPort(const Address &next_hop)
 void Router::onPortInput(Port* srcport, const Message& msg)
 {
 
-	if( is_link_update_message(msg)){
+	if( Message::is_link_update_message(msg)){
 		onLinkUpdate(msg);
 	}
 	else{

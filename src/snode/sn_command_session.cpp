@@ -11,12 +11,12 @@ using std::placeholders::_3;
 
 namespace snode {
 
-CommandSession::CommandSession(RouterImpl *router,
+CommandSession::CommandSession(Snode *snode,
         AddressManager* addressmgr,
         TransportManager* transportmgr,
         const TransEndpoint& ep
 )
-    :_router(router)
+    :_snode(snode)
     ,_addressmgr(addressmgr)
     ,_transportmgr(transportmgr)
 {
@@ -82,19 +82,16 @@ public:
         _remote_ep = ep;
     }
 
-    RouterImpl* router=nullptr;
+    Snode* snode=nullptr;
     AddressManager* addressmgr=nullptr;
 
     void commit()override{
-        assert(router);
-        assert(addressmgr);
-        static_cast<NetTransport*>(_port->transport())->remote_ep(_remote_ep);
-	    router->addPort(_port);
-	    router->addRouting(_alloced_addr, 1, _alloced_addr, _port);
+        assert(snode);
+        snode->addNeighbor(_alloced_addr, _port, _remote_ep);
     }
 
     void rollback()override{
-        addressmgr->releaseAddress(_alloced_addr);
+        snode->releaseAddress(_alloced_addr);
     }
 
 private:
@@ -107,20 +104,16 @@ private:
 cmd_ptr CommandSession::onRegister(Command* req)
 {
     std::shared_ptr<RegisterTransaction> rtransaction(new RegisterTransaction(req->id));
-    rtransaction->router = _router;
-    rtransaction->addressmgr = _addressmgr;
-
-    Transport* udp = _transportmgr->getUdpTransport(_cmd_transport_server->local_ep().ip);
-
-    Address addr = _addressmgr->allocAddress();
-	port_ptr port = std::make_shared<Port>();
-    port->setTransport(udp);
+    rtransaction->snode = _snode;
+    port_ptr port = _snode->newPort();
+    Address addr = _snode->allocAddress();
+	
 
     AddressConfigCmd* cmd = new AddressConfigCmd;
     cmd->id = req->id;
     cmd->address = addr.raw();
     cmd->ip = _cmd_transport_server->local_ep().ip;
-    cmd->port = udp->local_ep().port;
+    cmd->port = port->transport()->local_ep().port;
 
     rtransaction->addressAssigned(port, addr);
     _transaction_map[req->id] = rtransaction;
@@ -176,7 +169,7 @@ cmd_ptr CommandSession::onSharedRouting(Command* req)
     auto cmd = static_cast<ShareRoutingCmd*>(req);
 
     SharedRoutingTransaction transaction(req->id);
-    transaction.routing_method = _router->routing_method();
+    //transaction.routing_method = _router->routing_method();
     transaction.updateRouting(cmd->neighbor, cmd->info);
     transaction.commit();
 

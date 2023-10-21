@@ -6,6 +6,21 @@
 namespace snode{
 
 port_ptr RouteTable::routing(const Address &dst)const
+{  
+    return getBestRoute(find_dst(dst));
+}
+
+routeitem_ptr RouteTable::find_best_by_dst(const Address &dst) const
+{
+    const List& l = find_dst(dst);
+    if(l.empty()){
+        return nullptr;
+    }
+
+    return getBestItem(l);
+}
+
+RouteTable::List RouteTable::find_dst(const Address &dst) const
 {
     ///first match full address
     auto ilist = _routes.find(dst);
@@ -14,9 +29,9 @@ port_ptr RouteTable::routing(const Address &dst)const
         Address saddr(dst.sn(), 0ul);
         ilist = _routes.find(saddr);
         if( ilist == _routes.end() )
-            return nullptr;
+            return List();
     }
-    return getBestRoute(ilist->second);
+    return ilist->second;
 }
 
 void RouteTable::add(const Address &dst,
@@ -26,7 +41,7 @@ void RouteTable::add(const Address &dst,
 )
 {
     //dst, mask, next_hop, port
-    RouteItem item{dst, 0, metric, next_hop, port};
+    routeitem_ptr item( new RouteItem{dst, 0, metric, next_hop, port});
     auto ilist = _routes.find(dst);
     if( ilist == _routes.end() )
     {
@@ -38,9 +53,9 @@ void RouteTable::add(const Address &dst,
         ilist->second.push_back(item);
 }
 
-std::vector<RouteItem> RouteTable::getAllItems()const
+std::vector<routeitem_ptr> RouteTable::getAllItems()const
 {
-    std::vector<RouteItem> items;
+    std::vector<routeitem_ptr> items;
     for(auto& it: _routes){
         auto& l = it.second;
         for(auto& i : l){
@@ -57,16 +72,20 @@ port_ptr RouteTable::getBestRoute(const List& list)const
         return nullptr;
     }
 
-    auto first = list.begin();
+    routeitem_ptr item = getBestItem(list);
+    return item->port;
+}
 
-    for(auto it=++list.begin(); it!=list.end(); ++it){
-        if(it->metric < first->metric ){
+routeitem_ptr RouteTable::getBestItem(const List& l)const
+{
+    auto first = l.begin();
+
+    for(auto it=++l.begin(); it!=l.end(); ++it){
+        if( (*it)->metric < (*first)->metric ){
             first = it;
         }
     }
-
-    return first->port;
+    return *first;
 }
-
 
 }//namespace snode

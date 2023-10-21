@@ -38,8 +38,7 @@ void SnodeImpl::addNeighbor(const Neighbor& neib)
     port->setTransport(udp);
     _router->addPort(neib.addr, port);
     
-    Address neib_sn(neib.addr.sn(), 0u);
-    _router->addDRouting(neib_sn, 1, neib.addr, port);
+    _router->addRouting(neib.addr, 1, neib.addr);
     _neighbors.push_back(neib);
 }
 
@@ -47,24 +46,39 @@ void SnodeImpl::addStaticRoute(
     const Address& dst, int metric, const Address& next_hop
 )
 {
-    auto port = _router->route_table().routing(next_hop);
-    if(port == nullptr){
-        std::cout<<"Inavild route: next_top["<<next_hop.sn()<<","<<next_hop.en()<<"] not reachable\n";
-        return;
-    }
-
-    _router->addRouting(dst, metric, next_hop, port);
+    _router->addRouting(dst, metric, next_hop);
 }
 
-Address SnodeImpl::directlyRegister(Transport* trans)
+void SnodeImpl::addNeighbor(Address addr, port_ptr port, const TransEndpoint &remote_ep)
 {
-    Address addr = _addressmgr->allocAddress();
-	port_ptr port = std::make_shared<Port>();
-    port->setTransport(trans);
-    _router->addPort(port);
-    _router->addRouting(addr, 1, addr, port);
+    port->transport()->remote_ep(remote_ep);
+    _router->addPort(addr, port);
+    
+    _router->addRouting(addr, 1, addr);
+    Neighbor neib{addr, port->transport()->local_ep().port, remote_ep};
+    _neighbors.push_back(neib);
+}
 
-    return addr;
+port_ptr SnodeImpl::newPort()
+{
+    UdpTransport* udp = _transportmgr->getUdpTransport(
+            TransEndpoint{_local_forward_ip, 0}
+    );
+
+    port_ptr port = std::make_shared<Port>();
+    port->setTransport(udp);
+
+    return port;
+}
+
+Address SnodeImpl::allocAddress()
+{
+    return _addressmgr->allocAddress();
+}
+
+void SnodeImpl::releaseAddress(const Address &addr)
+{
+    _addressmgr->releaseAddress(addr);
 }
 
 }//namespace snode

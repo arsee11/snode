@@ -6,11 +6,31 @@
 
 namespace snode {
 
+bool Message::is_link_update_message(const Message &msg)
+{
+    return msg.payload_type() == LinkUpdateMsg;
+}
+
+const Message &Message::create_link_update_message(const Address &src, const Address &dst, const void *payload, size_t size)
+{
+    return Message(src, dst, payload, size);
+}
+
 Message::Message(const Address &src, const Address &dst, const void *payload, size_t size)
 {
     _header.src = src;
     _header.dst = dst;
     _header.length = header_size() + size;
+    _payload = new uint8_t[size];
+    memcpy(_payload, payload, size);
+}
+
+Message::Message(const Address& src, const Address& dst, uint8_t payload_type, const void *payload, size_t size)
+{
+    _header.src = src;
+    _header.dst = dst;
+    _header.length = header_size() + size;
+    _header.payload_type = payload_type;
     _payload = new uint8_t[size];
     memcpy(_payload, payload, size);
 }

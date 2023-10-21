@@ -21,6 +21,7 @@ public:
     typedef uint64_t raw_t;
 	static constexpr uint64_t SN_MAX=0x0000000000ffffff;
 	static constexpr uint64_t EN_MAX=0x000000ffffffffff;
+	static Address any(){ return Address(0u,0u);}
 
 private:
 	struct addr_t{
