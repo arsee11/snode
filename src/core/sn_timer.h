@@ -4,7 +4,9 @@
 #define SN_TIMER_H
 
 #include <functional>
-#include "arseeulib/threading/epoll.h"
+#include <errno.h>
+#include <sys/epoll.h>
+#include <unistd.h>
 
 namespace snode
 {
@@ -13,20 +15,15 @@ namespace snode
 class Timer
 {
     using timeout_cb = std::function<void()>;
-    struct TimerEvent
-    {
-        int fd;
-    };
 
 public:
-    Timer() =default;
+    Timer();
     void start(int interval, timeout_cb);
     void stop();
 
 private:
     int fd=-1;
-    TimerEvent timer_event;
-    arsee::net::Epoll<TimerEvent> epoll;
+    int _efd;
 };
 
 

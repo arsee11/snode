@@ -37,6 +37,12 @@ public:
     uint8_t* payload()const{ return _payload; }
     uint8_t payload_type()const{ return _header.payload_type; }
 
+    size_t header_size()const{ return sizeof(_header.start_flag)
+                         +sizeof(_header.length)
+                         +sizeof(_header.payload_type)
+                         +_header.src.size()
+                         +_header.dst.size();}
+                         
     size_t payload_size()const{ return this->size() - header_size(); }
 
     //total bytes of this message
@@ -51,12 +57,6 @@ public:
     std::tuple<uint8_t*, size_t> encode()const;
 
 
-private:
-    size_t header_size()const{ return sizeof(_header.start_flag)
-                         +sizeof(_header.length)
-                         +sizeof(_header.payload_type)
-                         +_header.src.size()
-                         +_header.dst.size();}
 
 private:
     struct Header{

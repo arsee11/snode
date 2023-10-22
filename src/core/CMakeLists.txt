@@ -9,6 +9,7 @@ sn_message.cpp
 sn_route_table.cpp
 sn_udptransport.cpp
 sn_router.cpp
+sn_timer.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${SRCS})
