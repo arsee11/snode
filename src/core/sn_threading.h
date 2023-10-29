@@ -2,14 +2,16 @@
 #define SN_THREADING_H
 
 #include <arseeulib/threading/exescope.h>
+#include <easynet/event_queue_epoll.h>
 
 namespace snode
 {
 
 using ThreadScope = arsee::ExeScope;
 
-template<class Poller>
-using ThreadScopePolling = arsee::ExeScope_p<Poller>;
+using EventQueueEpoll = arsee::net::EventQueueEpoll;
+using ThreadScopePolling = arsee::ExeScope_p<EventQueueEpoll>;
+using CurThreadingScope = arsee::CurExeScope<EventQueueEpoll>;
 
 }//namesapce snode
 

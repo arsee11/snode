@@ -40,12 +40,20 @@ int ENodeImpl::sendTo(const void* data, int len, const Address& peer)
     return _data_transport->send(buf, size);
 }
 
+static bool check_port(uint16_t port){
+    return port > 0;
+}
+
 TransEndpoint ENodeImpl::configAddress(const Address &addr, const TransEndpoint& remote_ep)
 {
     try{
         _data_transport.reset( _transportmgr->getUdpTransport(_local_ip) );
     }catch(std::exception& e){
         //return ERRORCmd("data transport open failed");
+    }
+    if( !check_port(remote_ep.port)){
+        //return ERRORCmd("endpoint port is invalid.");
+        std::cout<<"remote endpoint port["<<remote_ep.port<<"] is invalid."<<std::endl;
     }
     _data_transport->remote_ep(remote_ep);
     _data_transport->listenOnRecv([this](const void* data, int size){

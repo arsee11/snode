@@ -12,8 +12,9 @@ namespace snode {
 class  RouterImpl : public RouterT<RouteTable>
 {
 public:
+    //take onwership of @rm
     RouterImpl(RoutingMethod* rm);
-    bool start();
+    void setThreadingScope(ThreadScopePolling* thr)override;
 
     ///@brief add static route item
     ///@param dst dst snode/node address
@@ -22,8 +23,22 @@ public:
     void addRouting(const Address& dst, int metric,
                     const Address& next_hop);
 
-    void addDirectLink(const Address& next_hop, const port_ptr& port)override;
+    ///@brief update static route item
+    ///@param dst dst snode/node address
+    ///@param metric mectric of this route path
+    ///@param next_hop next snode for forwarding
+    void updateRouting(const Address& dst, int metric,
+                    const Address& next_hop);
 
+    void addNeighbor(const Address& n)override;
+
+    void my_address(const Address& addr){
+        _my_address = addr;
+    }
+
+    Address my_address()const{
+        return _my_address;
+    }
 
 protected:
     void onLinkUpdate(const Message& msg)override;
@@ -31,7 +46,8 @@ protected:
     void requirePort(routeitem_ptr item);
 
 protected:
-    RoutingMethod* _routing_method;
+    std::unique_ptr<RoutingMethod> _routing_method;
+    Address _my_address;
 };
 
 }//namespace snode

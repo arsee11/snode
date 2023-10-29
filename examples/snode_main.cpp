@@ -5,7 +5,9 @@
 #include "core/sn_json_route_serializer.h"
 #include "snode/sn_command_session.h"
 #include "snode/sn_snode_impl.h"
+#include "snode/sn_rip_routing.h"
 #include "snode/sn_neighbor.h"
+#include "core/sn_timer.h"
 
 using namespace snode;
 
@@ -15,7 +17,7 @@ using namespace std;
 using namespace std::placeholders;
 
 TransportManager transportmgr;
-RouterImpl router;
+RouterImpl router(new RIPRoutingMethod);
 
 std::string local_ip="127.0.0.1";
 
@@ -65,13 +67,53 @@ void configStaticRoute(Snode* sn)
     }
 }
 
-void setNeighbors(Snode* sn, const NeighborMap& ns)
+void setNeighbors(CommandSession* ss, Snode* sn, NeighborMap& ns)
 {
     for(auto& neib : ns){
-		sn->addNeighbor(neib);
+		port_ptr port = sn->newPort();
+        neib.port = port;
+        sn->addNeighbor(neib);
+    
+        HelloCmd::Hello hello{
+            sn->getAddress().raw(),
+            port->transport()->local_ep().ip,
+            port->transport()->local_ep().port
+        };
+		ss->sayHello(neib.comminucate_ep, hello);
     }
 }
 
+void updateNeighbors(CommandSession* ss, Snode* sn)
+{
+    auto ns = sn->getNeighbors();
+    for(auto& neib : ns){
+    
+        HelloCmd::Hello hello{
+            sn->getAddress().raw(),
+            neib.port->transport()->local_ep().ip,
+            neib.port->transport()->local_ep().port
+        };
+		ss->sayHello(neib.comminucate_ep, hello);
+    }
+}
+
+void cmd(CurThreadingScope* s)
+{
+    char ch;
+
+    cout<<">>";
+    cin >> ch;
+    if(ch == 'q'){
+        s->stop();
+        return;
+    }
+    if(ch == 'd'){
+        dumpRoute();
+    }
+
+    s->post(cmd, s);
+
+}
 
 int main(int argc, char* argv[])
 {
@@ -87,24 +129,27 @@ int main(int argc, char* argv[])
 	uint16_t port= atoi(argv[3]);
     TransEndpoint service_ep{local_ip, port};
 
-    NeighborMap neighbours;
-    readNeighbors(neighbours);
-    setNeighbors(&sn, neighbours);
-    configStaticRoute(&sn);
-
-	CommandSession cmd_sess(&router,
-			&addressmgr,
+	CommandSession cmd_sess(&sn,
 			&transportmgr,
 			service_ep);
 
-    char ch;
-    while(ch != 'q'){
-        cout<<">>";
-        cin >> ch;
-        if(ch == 'd'){
-            dumpRoute();
-        }
-    }
+    configStaticRoute(&sn);
+
+    NeighborMap neighbours;
+    readNeighbors(neighbours);
+    setNeighbors(&cmd_sess, &sn, neighbours);
+
+    EventQueueEpoll eq;
+    CurThreadingScope curc(&eq);
+    std::unique_ptr<Timer> timer(Timer::start(3000, [&]{
+        updateNeighbors(&cmd_sess, &sn);
+        //cout<<"update neighbors...\n";
+        dumpRoute();
+    }, curc.poller()));
+
+    //curc.post(cmd, &curc);
+
+    curc.run();
 
     transportmgr.clear();
 

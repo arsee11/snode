@@ -8,7 +8,7 @@ namespace snode
 AddressManager::AddressManager(uint32_t snaddr)
     :_snaddr(snaddr)
 {
-    _bitset.set(0);//the first addr for this snode
+    _bitset.set(0);
 }
 
 Address AddressManager::allocAddress()
@@ -29,7 +29,7 @@ void AddressManager::releaseAddress(const Address& addr)
         throw InvalidAddressException();
     }
    
-    _bitset.reset(i);
+    _bitset.reset(i-1);
 }
 
 

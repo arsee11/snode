@@ -30,7 +30,7 @@ UdpTransport* TransportManager::getUdpTransport(const TransEndpoint& local)
     UdpPeer * udp = new UdpPeer(&_evt_queue, local);
     udp->open();
 
-    return new UdpTransport(std::shared_ptr<UdpPeer>(udp), local);
+    return new UdpTransport(std::shared_ptr<UdpPeer>(udp), udp->local_addr());
 }
 
 UdpTransport* TransportManager::getUdpTransport(const std::string& lip)
@@ -46,7 +46,7 @@ TransportServer *TransportManager::getUdpTransportServer(const TransEndpoint &lo
     UdpPeer * udp = new UdpPeer(&_evt_queue, local);
     udp->open();
 
-    auto t = new UdpTransportServer(std::shared_ptr<UdpPeer>(udp), local);
+    auto t = new UdpTransportServer(std::shared_ptr<UdpPeer>(udp), udp->local_addr());
     t->open();
     return t;
 }

@@ -27,6 +27,35 @@ struct ShareRoutingCmd : public Command
     snode::RoutingInfo info;
 };
 
+struct HelloCmd : public Command
+{
+    struct Encoder : public CommandEncoder{
+        Encoder(HelloCmd* cmd);
+    };
+
+    struct Decoder : public CommandDecoder{
+        Decoder(HelloCmd* c);
+
+        void decode(void* params)override;
+        HelloCmd* cmd;
+    };
+
+    CommandEncoder* encoder()override{
+        return new Encoder(this);
+    }
+
+    CommandDecoder* decoder()override{
+        return new Decoder(this);
+    };
+
+    struct Hello{
+        uint64_t address;
+        std::string ip;
+        uint16_t port=0;
+    };
+    Hello hello;
+};
+
 template<class ...CmdDispatchers>
 class CommandParserT
 {
@@ -68,6 +97,11 @@ public:
             auto h = std::get<CmdDispatcher<ShareRoutingCmd>>(_dispatchers);
             cmd->dispatcher = h.dispatcher;
         }
+        else if(method == "hello"){
+            cmd.reset(new HelloCmd);
+            auto h = std::get<CmdDispatcher<HelloCmd>>(_dispatchers);
+            cmd->dispatcher = h.dispatcher;
+        }
         else if(method == "ok"){
             cmd.reset(new OKCmd);
             auto h = std::get<CmdDispatcher<OKCmd>>(_dispatchers);
@@ -93,6 +127,7 @@ using CommandParser = CommandParserT<
             CmdDispatcher<RegisterCmd>,
             CmdDispatcher<AddressConfirmCmd>,
             CmdDispatcher<ShareRoutingCmd>,
+            CmdDispatcher<HelloCmd>,
             CmdDispatcher<OKCmd>
        >;
 #endif /*SNODE_COMMANDS_H*/

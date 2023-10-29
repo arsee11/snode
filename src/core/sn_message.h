@@ -6,35 +6,35 @@
 #include <cstdint>
 #include <tuple>
 #include "sn_address.h"
+#include <memory>
 
 namespace snode
 {
 
 class Message 
 {
+public:
     enum{
         UnknownMsg=-1,
         NormalMsg=0,
         LinkUpdateMsg
     };
+    
 public:
     static bool is_link_update_message(const Message& msg);
-    static const Message& create_link_update_message(const Address& src, const Address& dst, const void *payload, size_t size);
+    static Message* create_link_update_message(const Address& src, const Address& dst, const void *payload, size_t size);
 
 public:
     Message(){}
-
-    ~Message(){
-        if( _payload != nullptr)
-            delete[] _payload;
-    }
-
+    
+     //@note:will make a copy of the payload 
     Message(const Address& src, const Address& dst, const void *payload, size_t size);
     Message(const Address& src, const Address& dst, uint8_t payload_type, const void *payload, size_t size);
 
+
     const Address& src()const{ return _header.src; }
     const Address& dst()const{ return _header.dst; }
-    uint8_t* payload()const{ return _payload; }
+    uint8_t* payload()const{ return _payload.get(); }
     uint8_t payload_type()const{ return _header.payload_type; }
 
     size_t header_size()const{ return sizeof(_header.start_flag)
@@ -68,7 +68,7 @@ private:
     };
 
 	Header _header;	
-    uint8_t* _payload=nullptr;
+    std::shared_ptr<uint8_t> _payload;
 };
 
 }

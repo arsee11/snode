@@ -9,11 +9,6 @@
 using namespace snode;
 using namespace std;
 
-std::ostream& operator<<(std::ostream& os, const Address& addr){
-	os<<"["<<addr.sn()<<"."<<addr.sn()<<"]";
-	return os;
-}
-
 BOOST_AUTO_TEST_SUITE(Address_test)
 BOOST_AUTO_TEST_CASE( test_1)
 {
@@ -22,6 +17,7 @@ BOOST_AUTO_TEST_CASE( test_1)
 	BOOST_TEST(addr.size()==64/8);
 	BOOST_TEST(addr.sn()==0x1000);
 	BOOST_TEST(addr.en()==0x12345);
+	BOOST_TEST_MESSAGE("addr is "<<addr);
 
 	BOOST_TEST_INFO("operator != < and ==");
 	Address addr2(0x1001u, 0x12345u);

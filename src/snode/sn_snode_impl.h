@@ -12,18 +12,21 @@ namespace snode {
 
 class CommandSession;
 
+//thread safty
 class SnodeImpl : public Snode
 {
 public:
     SnodeImpl(RouterImpl* router,
               AddressManager* addressmgr,
               TransportManager* transportmgr);
-    virtual ~SnodeImpl(){}
-    void setAddress(const Address& addr)override;
+    virtual ~SnodeImpl();
+    Address getAddress()const override;
     bool setupCommandTransport(const std::string& local_ip, int local_port)override;
     void addNeighbor(const Neighbor& neib)override;
+    void configNeighbor(const Address& neib_addr, const TransEndpoint& neib_port_ep)override;
+    NeighborMap getNeighbors()const override;
+    void addEnode(Address addr, port_ptr port, const TransEndpoint& remote_ep)override;
     void addStaticRoute(const Address& dst, int metric, const Address& next_hop)override;
-    void addNeighbor(Address addr, port_ptr port, const TransEndpoint& remote_ep)override;
     port_ptr newPort()override;
     Address allocAddress()override;
     void releaseAddress(const Address& addr)override;
@@ -36,7 +39,11 @@ protected:
     std::string _local_forward_ip;
     std::string _local_cmd_ip;
     int _local_cmd_port=0;
-    std::list<Neighbor> _neighbors;
+    std::map<Address, Neighbor> _neighbors;
+
+
+    EventQueueEpoll _event_eq;
+    std::unique_ptr<ThreadScopePolling> _thrscope;
 };
 
 

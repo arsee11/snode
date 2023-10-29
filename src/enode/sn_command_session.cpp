@@ -39,7 +39,7 @@ bool CommandSession::open(const TransEndpoint& local_ep, const TransEndpoint& sn
     RegisterCmd req;
     req.id = Command::genId();
     auto cmde = req.encoder();
-    cout<<"send cmd:"<<(const char*)cmde->buf()<<endl;
+    cout<<"send cmd to "<<snode_ep<<" "<<(const char*)cmde->buf()<<endl;
     _cmd_transport->send(cmde->buf(), cmde->size());
 
     //TODO:handle errors
@@ -49,7 +49,7 @@ bool CommandSession::open(const TransEndpoint& local_ep, const TransEndpoint& sn
 void CommandSession::onRecvCmd(const void *data, int size)
 {
     std::cout<<"Recv cmd:";
-    std::cout<<(const char*)data<<endl;
+    std::cout<<std::string((const char*)data, size)<<std::endl;
 
     cmd_ptr req = std::move(_cmd_parser.parse((const char*)data, size));
     if(req == nullptr){

@@ -20,7 +20,7 @@ int UdpTransport::send(const void *data, int size){
 
 void UdpTransport::onRecv(const TransEndpoint &remote, const NetMsg &msg){
     if( remote != _remote_ep){
-        std::cout <<"From ["<<_remote_ep.ip<<":"<<_remote_ep.port<<":] not my expected. drop it."<<std::endl;
+        std::cout <<"From "<<remote<<" not my expected "<<_remote_ep<<". drop it."<<std::endl;
         return;
     }
 

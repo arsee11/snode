@@ -16,12 +16,12 @@ class RIPRoutingMethod : public RoutingMethod
 public:
     RIPRoutingMethod();
     void start();
-    void stop();
+    void setThreadingScope(ThreadScopePolling* thr);
 
     // RoutingMethod interface
 public:
-    void addNeighbor(const Neighbor& n)override;
-    void removeNeighbor(const Neighbor& n)override;
+    void addNeighbor(const Address& n)override;
+    void removeNeighbor(const Address& n)override;
     void onRecvMsg(const Address& from, const uint8_t *msg_buf, size_t size)override;
     void listenMessageReady(const message_cb& cb)override{ _shared_cb = cb; }
     void listenRequiredPort(const required_port_cb& cb)override{ _required_port_cb = cb; }
@@ -31,15 +31,15 @@ public:
 private:
     void onAdvertisingRoutingInfo();
     void shareRoutingInfo(const Address& to);
-
-    Timer _periodic_timer;
-    Timer _expiration_timer;
-    Timer _garbage_collection_timer;
+    using timer_ptr = std::unique_ptr<Timer>;
+    timer_ptr _periodic_timer;
+    timer_ptr _expiration_timer;
+    timer_ptr _garbage_collection_timer;
     RouteTable* _route_table=nullptr;
-    std::list<Neighbor> _neighbors;
+    std::list<Address> _neighbors;
     message_cb _shared_cb;
     required_port_cb _required_port_cb; 
-
+    ThreadScopePolling* _thrscope=nullptr;
 };
 
 }//namespace snode

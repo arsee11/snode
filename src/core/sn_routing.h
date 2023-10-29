@@ -5,6 +5,7 @@
 
 #include "core/sn_address.h"
 #include "core/sn_route_table.h"
+#include "core/sn_threading.h"
 #include <vector>
 
 namespace snode {
@@ -13,25 +14,19 @@ struct RoutingInfo
 {
     struct Item{
         Address dst;        //destination snode/enode address
-	    uint64_t mask;      //snode adderss mask
+	    uint64_t mask=0;      //snode adderss mask
 	    int metric;         //metric of this route path
     };
 
     std::vector<Item> items;
 };
 
-
-
-struct Neighbor
-{
-    Address addr;           //remote (the Neighbor)'s Address
-    uint16_t lport;         //local endpoint port
-    TransEndpoint rendpoint;//remote(the Neighbor)'s endpoint
-};
-inline bool operator==(const Neighbor& lhs, const Neighbor& rhs){
-    return ( lhs.addr == rhs.addr );
+inline std::ostream& operator<<(std::ostream& os, const std::vector<RoutingInfo::Item>& items){
+    for( auto i : items){
+	    os<<i.dst<<"|"<<i.mask<<"|"<<i.metric<<"\n";
+    }
+	return os;
 }
-
 
 
 class RoutingMethod
@@ -42,8 +37,9 @@ public:
     
 public:
     virtual ~RoutingMethod(){}
-    virtual void addNeighbor(const Neighbor& n)=0;
-    virtual void removeNeighbor(const Neighbor& n)=0;
+    virtual void setThreadingScope(ThreadScopePolling* thr)=0;
+    virtual void addNeighbor(const Address& n)=0;
+    virtual void removeNeighbor(const Address& n)=0;
     virtual void onRecvMsg(const Address& from, const uint8_t* msg, size_t size)=0;
     virtual void listenMessageReady(const message_cb& cb)=0;
     virtual void listenRequiredPort(const required_port_cb& cb)=0;

@@ -16,15 +16,15 @@ RIPMessage RIPMessage::parse(const uint8_t* buf, size_t size)
 
     msg.command = read_bytes<uint8_t, 1>(buf);
     buf += 1;
-    msg.version = read_bytes<uint8_t, 1>(buf+1);
+    msg.version = read_bytes<uint8_t, 1>(buf);
     buf += 1;
-    msg.nfileds = read_bytes<uint8_t, 1>(buf+1);
+    msg.nfields = read_bytes<uint8_t, 1>(buf);
     buf += 1;
-    if( size-RIPMessage::header_size() < msg.size()){
+    if( size-RIPMessage::header_size() < msg.nfields*field_size){
             msg.command = RIPMessage::InvalidCommand;
         return msg;
     }
-    for(int i=0; i<msg.nfileds; i++){
+    for(int i=0; i<msg.nfields; i++){
         field f;
         f.family = read_bytes<uint16_t, 2>(buf);
         buf += 2;
@@ -49,11 +49,11 @@ size_t RIPMessage::serialize(const RIPMessage& msg, uint8_t* buf, size_t buf_siz
 
     write_bytes<uint8_t, 1>(buf, msg.command);
     buf += 1;
-    write_bytes<uint8_t, 1>(buf, msg.command);
+    write_bytes<uint8_t, 1>(buf, msg.version);
     buf += 1;
-    write_bytes<uint8_t, 1>(buf, msg.command);
+    write_bytes<uint8_t, 1>(buf, msg.nfields);
     buf += 1;
-    for(int i=0; i<msg.nfileds; i++){
+    for(int i=0; i<msg.nfields; i++){
         const field& f = msg.fields[i];
         write_bytes<uint16_t, 2>(buf, f.family);
         buf += 2;

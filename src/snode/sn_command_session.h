@@ -8,7 +8,6 @@
 #include "sn_snode_impl.h"
 #include "cmd/snode_cmds.h"
 #include "core/sn_transport.h"
-#include "core/sn_routing.h"
 
 namespace snode {
 
@@ -33,10 +32,11 @@ class CommandSession
 public:
     CommandSession(
         Snode *snoder,
-        AddressManager* addressmgr,
         TransportManager* transportmgr,
         const TransEndpoint& ep
     );
+
+    void sayHello(const TransEndpoint& to, const HelloCmd::Hello& h);
 
 protected:
     TransportServer* _cmd_transport_server;
@@ -49,12 +49,12 @@ private:
     cmd_ptr onRegister(Command* req);
     cmd_ptr onAddressConfirm(Command* req);
     cmd_ptr onSharedRouting(Command* req);
+    cmd_ptr onHello(Command* req);
     cmd_ptr onCmdOK(Command* req);
 
     std::map<std::string, transaction_ptr> _transaction_map;
     CommandParser _cmd_parser;
     Snode* _snode;
-    AddressManager* _addressmgr;
     TransportManager* _transportmgr;
 };
 

@@ -25,6 +25,7 @@ void write_bytes(uint8_t* data, T val) {
         for (unsigned int i = 0; i < N; ++i) {
         data[i] = val >> ((N - 1 - i) * 8);
     }
+    
 }
 
 struct RIPMessage{    
@@ -34,18 +35,19 @@ struct RIPMessage{
         InvalidCommand = 255
     };
 
-    uint8_t command;
-    uint8_t version;
-    uint8_t nfileds=0;
+    uint8_t command=InvalidCommand;
+    uint8_t version=0;
+    uint8_t nfields=0;
     struct field{
         uint16_t family;
         uint64_t address;
         uint16_t metric;
     };
-    std::vector<field> fields;    
+    static constexpr int field_size = 12;
 
+    std::vector<field> fields;    
     size_t size()const{
-        return header_size() + nfileds * sizeof(field);
+        return header_size() + nfields * field_size;
     }
 
     static size_t header_size(){

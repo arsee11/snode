@@ -34,7 +34,7 @@ RouteTable::List RouteTable::find_dst(const Address &dst) const
     return ilist->second;
 }
 
-void RouteTable::add(const Address &dst,
+routeitem_ptr RouteTable::add(const Address &dst,
                     int metric,
                     const Address& next_hop, 
                     const snode::port_ptr &port
@@ -51,6 +51,8 @@ void RouteTable::add(const Address &dst,
     }
     else
         ilist->second.push_back(item);
+
+    return item;
 }
 
 std::vector<routeitem_ptr> RouteTable::getAllItems()const

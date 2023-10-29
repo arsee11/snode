@@ -15,7 +15,7 @@ class ENodeImpl : public ENode
     using ConnectCb = std::function<void(int ec, const char* msg)>;
 
 public:
-    ENodeImpl(const std::string& lip);
+    ENodeImpl(const std::string& lip="");
     void listenOnRecv(RecvCb cb)override;
     void connect(const TransEndpoint& snode_ep, ConnectCb cb)override;
     int sendTo(const void* data, int len, const Address& peer)override;

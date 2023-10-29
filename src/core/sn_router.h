@@ -5,6 +5,7 @@
 
 #include "sn_port.h"
 #include "sn_message.h"
+#include "sn_threading.h"
 #include <map>
 
 namespace snode
@@ -18,10 +19,12 @@ class Router
 {
 public:
     Router() =default;
+    virtual void setThreadingScope(ThreadScopePolling* thr)=0;
 
-    virtual void addDirectLink(const Address& next_hop, const port_ptr& port)=0;
+    //virtual void addDirectLink(const Address& next_hop, const port_ptr& port)=0;
     void addPort(const Address& next_hop, const port_ptr& port);
     port_ptr findPort(const Address& next_hop);
+    virtual void addNeighbor(const Address& n)=0;
 
 protected:
     void onPortInput(Port* srcport, const Message& msg);
@@ -30,6 +33,8 @@ protected:
 
     ///Binding the next hop addresses and ports
     std::map<Address, port_ptr> _ports;
+
+    ThreadScopePolling* _thrscope=nullptr;
 };
 
 

@@ -15,13 +15,15 @@ namespace snode
 void Router:: addPort(const Address &next_hop, const port_ptr& port)
 {
     assert(port.get());
+	assert(_thrscope != nullptr);
 	port->setInputCallBack([this](Port* srcport, const Message& msg)
 	{ 
-		this->onPortInput(srcport, msg); 
+		_thrscope->post(&Router::onPortInput, this, srcport, msg); 
 	});
 
     _ports[next_hop] = port;
 }
+
 
 port_ptr Router::findPort(const Address &next_hop)
 {
@@ -30,6 +32,7 @@ port_ptr Router::findPort(const Address &next_hop)
 
 void Router::onPortInput(Port* srcport, const Message& msg)
 {
+	assert(_thrscope->isInMyScope());
 
 	if( Message::is_link_update_message(msg)){
 		onLinkUpdate(msg);

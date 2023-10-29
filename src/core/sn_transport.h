@@ -2,6 +2,7 @@
 #define SN_TRANSPORT_H
 
 #include <easynet/udppeer.h>
+#include <ostream>
 
 namespace snode {
 
@@ -9,6 +10,12 @@ using TransEndpoint = arsee::net::AddrPair;
 using UdpPeer = arsee::net::UdpPeer4;
 using NetMsg = arsee::net::MsgSt;
 using NetEventQueue = arsee::net::EventQueueEpoll;
+using IP = arsee::net::IP;
+
+inline std::ostream& operator<<(std::ostream& os, const TransEndpoint& ep){
+	os<<"{"<<ep.ip<<":"<<ep.port<<"}";
+	return os;
+}
 
 //////////////////////////////////////////////////////////////////////////
 class Transport
@@ -54,9 +61,14 @@ public:
     NetTransport(const TransEndpoint& local)
         :_local_ep(local)
     {
+        if(IP::is_any_ip(local.ip)){
+            _local_ep.ip = IP::get_a_host_ipv4();
+        }
     }
 
-    TransEndpoint local_ep()const override{ return _local_ep; }
+    TransEndpoint local_ep()const override{ 
+        return _local_ep; 
+    }
     TransEndpoint remote_ep()const override{ return _remote_ep; }
     void remote_ep(const TransEndpoint& ep){ _remote_ep = ep; }
 

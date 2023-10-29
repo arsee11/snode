@@ -1,5 +1,5 @@
 
-project(enode LANGUAGES CXX)
+project(snode-en LANGUAGES CXX)
 
 set(SRCS 
 sn_command_session.cpp

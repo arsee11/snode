@@ -39,10 +39,10 @@ void readNeighbors(snode::NeighborMap &ns)
             auto jneib = i.as_object();
             uint32_t sn = jneib["sn"].as_int64();
             uint32_t en = jneib["en"].as_int64();
-            uint16_t lport = jneib["lport"].as_int64();;
-            uint16_t rport = jneib["rport"].as_int64();;
-            std::string rip= jneib["rip"].as_string().c_str();
-            ns.push_back( {Address(sn, en), lport, {rip, rport}} );
+            std::string name= jneib["name"].as_string().c_str();
+            uint16_t port = jneib["port"].as_int64();;
+            std::string ip= jneib["ip"].as_string().c_str();
+            ns.push_back( {name, Address(sn,en), nullptr, {ip, port}} );
         }
     } catch (std::exception& e) {
         std::cout<<"parse neighbors.conf failed:"<<e.what()<<std::endl;

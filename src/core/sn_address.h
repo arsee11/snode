@@ -7,6 +7,7 @@
 #include <functional>
 #include <assert.h>
 #include <endian.h>
+#include <ostream>
 
 namespace snode
 {
@@ -95,6 +96,11 @@ struct AddressHash
         return std::hash<uint64_t>{}(addr.raw());
 	}
 };
+
+inline std::ostream& operator<<(std::ostream& os, const Address& addr){
+	os<<"["<<addr.sn()<<"."<<addr.en()<<"]";
+	return os;
+}
 
 }
 

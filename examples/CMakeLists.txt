@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(snode_test LANGUAGES CXX)
 
 #set(CMAKE_SYSTEM_NAME Linux)
 #set(TOOLCHAIN_PATH /home/arsee/tools/gcc-arm-10.2-2020.11-x86_64-aarch64-none-linux-gnu)
@@ -15,19 +14,33 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_CXX_FLAGS " -g ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS " -Wl,-rpath ./ ${CMAKE_CXX_FLAGS}")
 
-include_directories(${PROJECT_SOURCE_DIR}/../../)
-include_directories(${PROJECT_SOURCE_DIR}/../../../../)
+include_directories(../src)
+include_directories(../../)
 
-link_directories(${PROJECT_SOURCE_DIR}/../../../lib)
+link_directories(../lib)
 
-file(GLOB SRCS *.cpp)
-add_executable(${PROJECT_NAME} ${SRCS})
+set(CMAKE_CXX_FLAGS " -g -fsanitize=address ${CMAKE_CXX_FLAGS}")
+
+project(snode LANGUAGES CXX)
+
+add_executable(${PROJECT_NAME} snode_main.cpp)
 target_link_libraries(${PROJECT_NAME} 
     snode-sn
     snode-core
-    boost_unit_test_framework
-    boost_test_exec_monitor
+    snode-cmd
+    boost_json
+    pthread
 )
 
+project(enode LANGUAGES CXX)
 
+add_executable(${PROJECT_NAME} enode_main.cpp)
+target_link_libraries(${PROJECT_NAME} 
+    snode-en
+    snode-core
+    snode-cmd
+    boost_json
+    pthread
+)

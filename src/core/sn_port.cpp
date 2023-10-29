@@ -50,7 +50,7 @@ int Port::output(const Message& m)
 
 int Port::input(const Message &m)
 {
-    std::cout<<"port input size="<<m.size()<<std::endl; 
+    std::cout<<"port local ep"<<_transport->local_ep()<<"size="<<m.size()<<std::endl; 
     if(this->_input_cb != nullptr)
     {
         this->_input_cb(this, m);

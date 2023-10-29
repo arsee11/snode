@@ -27,7 +27,7 @@ public:
     port_ptr routing(const Address&	dst)const;
     routeitem_ptr find_best_by_dst(const Address& dst)const;
 
-    void add(const Address &dst,
+    routeitem_ptr add(const Address &dst,
              int metric,
              const Address& next_hop, 
              const snode::port_ptr &port
