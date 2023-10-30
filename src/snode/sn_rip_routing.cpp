@@ -25,7 +25,6 @@ RIPRoutingMethod::RIPRoutingMethod()
 void RIPRoutingMethod::setThreadingScope(ThreadScopePolling *thr)
 {
     _thrscope = thr;
-    start();
 }
 
 void RIPRoutingMethod::start()
@@ -37,6 +36,11 @@ void RIPRoutingMethod::start()
         Timer::start(interval*1000, 
             std::bind(&RIPRoutingMethod::onAdvertisingRoutingInfo, this), _thrscope->poller())
     );
+}
+
+void RIPRoutingMethod::stop()
+{
+    _periodic_timer->stop();
 }
 
 void RIPRoutingMethod::addNeighbor(const Address& n)

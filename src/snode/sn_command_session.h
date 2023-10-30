@@ -39,7 +39,7 @@ public:
     void sayHello(const TransEndpoint& to, const HelloCmd::Hello& h);
 
 protected:
-    TransportServer* _cmd_transport_server;
+    std::unique_ptr<TransportServer> _cmd_transport_server;
     std::list<trans_ptr> _cmd_transports;
 
     void onNewConnect(const trans_ptr &conn);

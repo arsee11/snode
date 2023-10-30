@@ -15,8 +15,9 @@ class RIPRoutingMethod : public RoutingMethod
 
 public:
     RIPRoutingMethod();
-    void start();
-    void setThreadingScope(ThreadScopePolling* thr);
+    void start()override;
+    void stop()override;
+    void setThreadingScope(ThreadScopePolling* thr)override;
 
     // RoutingMethod interface
 public:

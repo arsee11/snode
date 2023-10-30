@@ -10,7 +10,7 @@ namespace snode
 
 void Port::setTransport(Transport* t)
 {
-    _transport = t;
+    _transport.reset(t);
     if(_transport != nullptr){
         _transport->listenOnRecv(
             [this](const void* data, int size)

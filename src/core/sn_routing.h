@@ -37,6 +37,8 @@ public:
     
 public:
     virtual ~RoutingMethod(){}
+    virtual void start()=0;
+    virtual void stop()=0;
     virtual void setThreadingScope(ThreadScopePolling* thr)=0;
     virtual void addNeighbor(const Address& n)=0;
     virtual void removeNeighbor(const Address& n)=0;

@@ -16,15 +16,13 @@ using namespace snode;
 using namespace std;
 using namespace std::placeholders;
 
-TransportManager transportmgr;
-RouterImpl router(new RIPRoutingMethod);
 
 std::string local_ip="127.0.0.1";
 
-void dumpRoute()
+void dumpRoute(RouterImpl* router)
 {
     cout<<"------------routes-----------------\n";
-    JsonRouteSerializer<RouterImpl> s(&router);
+    JsonRouteSerializer<RouterImpl> s(router);
     cout<<s()<<endl;
 }
 
@@ -97,7 +95,7 @@ void updateNeighbors(CommandSession* ss, Snode* sn)
     }
 }
 
-void cmd(CurThreadingScope* s)
+void cmd(RouterImpl* router, CurThreadingScope* s)
 {
     char ch;
 
@@ -108,12 +106,10 @@ void cmd(CurThreadingScope* s)
         return;
     }
     if(ch == 'd'){
-        dumpRoute();
+        dumpRoute(router);
     }
-
-    s->post(cmd, s);
-
 }
+
 
 int main(int argc, char* argv[])
 {
@@ -123,12 +119,14 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
+    RouterImpl* router = new RouterImpl(new RIPRoutingMethod);
+    TransportManager transportmgr;
 	AddressManager addressmgr = AddressManager(atoi(argv[1]));
-	SnodeImpl sn(&router, &addressmgr, &transportmgr);
+	SnodeImpl sn(router, &addressmgr, &transportmgr);
+
 	local_ip = argv[2];
 	uint16_t port= atoi(argv[3]);
     TransEndpoint service_ep{local_ip, port};
-
 	CommandSession cmd_sess(&sn,
 			&transportmgr,
 			service_ep);
@@ -143,11 +141,13 @@ int main(int argc, char* argv[])
     CurThreadingScope curc(&eq);
     std::unique_ptr<Timer> timer(Timer::start(3000, [&]{
         updateNeighbors(&cmd_sess, &sn);
-        //cout<<"update neighbors...\n";
-        dumpRoute();
+        cout<<"update neighbors...\n";
     }, curc.poller()));
 
-    //curc.post(cmd, &curc);
+    //listen stdin (fd=0)
+    eq.bindInput(0, [&]{
+        cmd(router, &curc);
+    });
 
     curc.run();
 

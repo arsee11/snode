@@ -22,9 +22,9 @@ using OnInputCb = std::function<void (Port* port, const Message& msg)>;
 class Port
 {
 public:
-    //void setAddress(const Address& addr){ _addr = addr; }
+    //take the onwership of transport 
     void setTransport(Transport* t);
-    Transport* transport(){ return _transport; }
+    Transport* transport(){ return _transport.get(); }
 	int output(const Message& m);
 
 	int input(const Message& m);
@@ -36,7 +36,7 @@ private:
 
 protected:
     //Address _addr;
-    Transport* _transport=nullptr;;
+    std::unique_ptr<Transport> _transport;
     OnInputCb _input_cb=nullptr;
 };
 

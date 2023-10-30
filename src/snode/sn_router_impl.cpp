@@ -21,6 +21,12 @@ void RouterImpl::setThreadingScope(ThreadScopePolling *thr)
     assert(_routing_method != nullptr);
     _thrscope = thr;
     _routing_method->setThreadingScope(thr);
+    _routing_method->start();
+}
+
+void RouterImpl::stop()
+{
+    _routing_method->stop();
 }
 
 void RouterImpl::addRouting(const Address &dst, int metric, const Address &next_hop)

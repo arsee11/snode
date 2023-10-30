@@ -25,6 +25,9 @@ public:
         _udp->listenOnRecv(std::bind(&UdpTransport::onRecv, this, _1, _2));
     }
 
+    ~UdpTransport(){
+        _udp->close();
+    }
     int send(const void* data, int size)override;
 
 protected:

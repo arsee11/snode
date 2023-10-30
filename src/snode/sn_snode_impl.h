@@ -16,6 +16,7 @@ class CommandSession;
 class SnodeImpl : public Snode
 {
 public:
+    //task onwership of router
     SnodeImpl(RouterImpl* router,
               AddressManager* addressmgr,
               TransportManager* transportmgr);
@@ -32,7 +33,7 @@ public:
     void releaseAddress(const Address& addr)override;
     
 protected:
-    RouterImpl* _router=nullptr;
+    std::unique_ptr<RouterImpl> _router;
     AddressManager* _addressmgr;
     TransportManager* _transportmgr;
     Address _address;

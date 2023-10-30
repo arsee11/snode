@@ -20,6 +20,7 @@ protected:
 
 class Command;
 using cmd_ptr = std::unique_ptr<Command>;;
+using cmde_ptr = std::unique_ptr<CommandEncoder>;;
 
 class CommandDecoder
 {

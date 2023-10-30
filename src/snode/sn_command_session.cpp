@@ -18,7 +18,7 @@ CommandSession::CommandSession(Snode *snode,
     :_snode(snode)
     ,_transportmgr(transportmgr)
 {
-    _cmd_transport_server = _transportmgr->getUdpTransportServer(ep);
+    _cmd_transport_server.reset(_transportmgr->getUdpTransportServer(ep));
     _cmd_transport_server->listenOnConnect(std::bind(&CommandSession::onNewConnect, this, _1));
 
     _cmd_parser.setDispatcher(
@@ -51,7 +51,7 @@ void CommandSession::sayHello(const TransEndpoint &to, const HelloCmd::Hello &h)
     HelloCmd req;
     req.id = Command::genId();
     req.hello = h;
-    auto cmde = req.encoder();
+    cmde_ptr cmde(req.encoder());
     //cout<<"send cmd:"<< t->remote_ep()<<":"<<(const char*)cmde->buf()<<endl;
     cmd_transport->send(cmde->buf(), cmde->size());
 }
@@ -77,7 +77,7 @@ void CommandSession::onRecvCmd(const void *data, int size, trans_ptr t)
     cmd_ptr rsp = req->dispatch();
 
     if(rsp != nullptr){
-        CommandEncoder* cmde = rsp->encoder();
+        cmde_ptr cmde(rsp->encoder());
         t->send(cmde->buf(), cmde->size());
         //std::cout<<"send rsp to "<<t->remote_ep()<<":";
         //std::cout<<(const char*)cmde->buf()<<endl;

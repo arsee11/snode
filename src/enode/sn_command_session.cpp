@@ -38,7 +38,7 @@ bool CommandSession::open(const TransEndpoint& local_ep, const TransEndpoint& sn
 
     RegisterCmd req;
     req.id = Command::genId();
-    auto cmde = req.encoder();
+    cmde_ptr cmde(req.encoder());
     cout<<"send cmd to "<<snode_ep<<" "<<(const char*)cmde->buf()<<endl;
     _cmd_transport->send(cmde->buf(), cmde->size());
 
@@ -58,7 +58,7 @@ void CommandSession::onRecvCmd(const void *data, int size)
     cmd_ptr rsp = req->dispatch();
 
     if(rsp != nullptr){
-        CommandEncoder* cmde = rsp->encoder();
+        cmde_ptr cmde(rsp->encoder());
         _cmd_transport->send(cmde->buf(), cmde->size());
         std::cout<<"send rsp:"<<(const char*)cmde->buf()<<endl;
     }

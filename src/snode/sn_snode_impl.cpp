@@ -16,12 +16,11 @@ SnodeImpl::SnodeImpl(RouterImpl *router,
     _thrscope->name("snode_scope");
     _router->setThreadingScope(_thrscope.get());
     _router->my_address(_address);
-
 }
 
 SnodeImpl::~SnodeImpl()
 {
-
+    _router->stop();
 }
 
 Address SnodeImpl::getAddress() const

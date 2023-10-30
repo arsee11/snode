@@ -15,7 +15,8 @@ public:
     //take onwership of @rm
     RouterImpl(RoutingMethod* rm);
     void setThreadingScope(ThreadScopePolling* thr)override;
-
+    void stop();
+    
     ///@brief add static route item
     ///@param dst dst snode/node address
     ///@param metric mectric of this route path
