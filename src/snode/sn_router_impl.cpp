@@ -26,11 +26,15 @@ void RouterImpl::setThreadingScope(ThreadScopePolling *thr)
 
 void RouterImpl::stop()
 {
+    assert(_thrscope != nullptr);
+	assert(_thrscope->isInMyScope());
     _routing_method->stop();
 }
 
 void RouterImpl::addRouting(const Address &dst, int metric, const Address &next_hop)
 {
+    assert(_thrscope != nullptr);
+	assert(_thrscope->isInMyScope());
     auto port = findPort(next_hop);
     if(port != nullptr )
         _route_table.add(dst, metric, next_hop, port);
@@ -40,6 +44,8 @@ void RouterImpl::addRouting(const Address &dst, int metric, const Address &next_
 
 void RouterImpl::updateRouting(const Address &dst, int metric, const Address &next_hop)
 {
+    assert(_thrscope != nullptr);
+	assert(_thrscope->isInMyScope());
     auto item = _route_table.find_best_by_dst(dst);
     if(item == nullptr){
         addRouting(dst, metric, next_hop);
@@ -58,15 +64,19 @@ void RouterImpl::addNeighbor(const Address &n)
     }
 }
 
-// void RouterImpl::addDirectLink(const Address &next_hop, const port_ptr &port)
-// {
-//     addPort(next_hop, port);
-//     Address dst_sn(next_hop.sn(), 0u);
-//     addRouting(dst_sn, 1, next_hop, port);
-//     _routing_method->addDirectLink(next_hop);
-// }
+void RouterImpl::delNeighbor(const Address &n)
+{
+    if(_routing_method != nullptr){
+        _routing_method->removeNeighbor(n);
+    }
+}
 
-void RouterImpl::onLinkUpdate(const Message& msg)
+int RouterImpl::unreachable_metric() const
+{
+    return _routing_method->unreachable_metric();
+}
+
+void RouterImpl::onLinkUpdate(const Message &msg)
 {
     //std::cout<<__FUNCTION__<<" from "<<msg.src()<<" size "<<msg.size()<<std::endl;
 
@@ -82,7 +92,7 @@ void RouterImpl::onLinkUpdateMessageReady(const Address &to, const uint8_t *msg_
 {
     //std::cout<<__FUNCTION__<<" to "<<to<<" size "<<size<<std::endl;
     std::unique_ptr<Message> msg( Message::create_link_update_message(my_address(), to, msg_buf, size) );
-    port_ptr port = _route_table.routing(to);
+    port_ptr port = _route_table.routing(to, unreachable_metric());
     if(port != nullptr){
         port->output(*msg);
     }

@@ -17,17 +17,18 @@ namespace snode
 class Timer
 {
 protected:
-    using timeout_cb = std::function<void()>;
+    using timeout_cb = std::function<void(int)>;
 
 public:
     virtual ~Timer();
 
     static Timer* start(int interval, timeout_cb, EventQueueEpoll* eq);
     static Timer* start(int interval, EventQueueEpoll* eq);
-    void stop();
+    virtual void stop();
 
     enum{
         Timeout,
+        Cancel,
         Invalid
     };
     virtual int wait(){ throw std::runtime_error("can't wait.");}
@@ -67,8 +68,9 @@ class AwaitTimer : public Timer
                 _timer->_coro_h = awaiting_coro;
             }
 
-            void await_resume(){
+            int await_resume(){
                 _timer->stop();
+                return _timer->_state;
             }  
 
             AwaitTimer* _timer=nullptr;    
@@ -86,12 +88,27 @@ public:
         return Awaiter(this);
     }
 
+    // void stop()override{
+    //     Timer::stop();
+    //     reset();
+    // }
+
+    void reset(){
+        if( !_coro_h.done() ){
+            _state = Cancel;
+            _coro_h.resume();
+        }
+    }
+
 private:
+   
     void onTimeout()override{
+        _state = Timeout;
         _coro_h.resume();
     }
 
     std::coroutine_handle<> _coro_h;
+    int _state=Invalid;
 };
 
 }

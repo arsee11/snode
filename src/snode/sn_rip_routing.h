@@ -13,6 +13,10 @@ namespace snode {
 class RIPRoutingMethod : public RoutingMethod
 {
 
+    enum{
+        UNREACHABLE=16
+    };
+    
 public:
     RIPRoutingMethod();
     void start()override;
@@ -27,9 +31,10 @@ public:
     void listenMessageReady(const message_cb& cb)override{ _shared_cb = cb; }
     void listenRequiredPort(const required_port_cb& cb)override{ _required_port_cb = cb; }
     void route_table(RouteTable* rt)override{ _route_table = rt; }
-    void updateRouting(const Address& from, const RoutingInfo& info)override;
+    int unreachable_metric()const override{ return UNREACHABLE; }
 
 private:
+    void updateRouting(const Address& from, const RoutingInfo& info);
     void onAdvertisingRoutingInfo();
     void shareRoutingInfo(const Address& to);
     using timer_ptr = std::unique_ptr<Timer>;

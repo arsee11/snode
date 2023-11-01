@@ -1,5 +1,8 @@
 ///sn_test.cpp
 
+#include <fstream>
+#include <boost/json.hpp>
+
 #include "core/sn_transport_manager.h"
 #include "core/sn_address_manager.h"
 #include "core/sn_json_route_serializer.h"
@@ -21,9 +24,23 @@ std::string local_ip="127.0.0.1";
 
 void dumpRoute(RouterImpl* router)
 {
-    cout<<"------------routes-----------------\n";
-    JsonRouteSerializer<RouterImpl> s(router);
-    cout<<s()<<endl;
+    cout<<"------------route table-----------------\n";
+    // JsonRouteSerializer<RouterImpl> s(router);
+    // cout<<s()<<endl;
+
+    cout<<"dst\t mask\t metric\t next\t lep\t\t\t rep"<<endl;
+
+    if(router != nullptr){
+        auto items = router->route_table().getAllItems();
+        for(size_t i=0; i<items.size(); i++){
+            auto item = items[i];
+            cout<<item->dst <<"\t "<<item->mask<<"\t "<<item->metric<<"\t "<<item->next_hop<<"\t "
+                <<item->port->transport()->local_ep().ip<<":"<<item->port->transport()->local_ep().port<<"\t "
+                <<item->port->transport()->remote_ep().ip<<":"<<item->port->transport()->remote_ep().port<<endl;
+
+        }
+    }
+
 }
 
 void configStaticRoute(Snode* sn)
@@ -65,34 +82,51 @@ void configStaticRoute(Snode* sn)
     }
 }
 
-void setNeighbors(CommandSession* ss, Snode* sn, NeighborMap& ns)
+NeighborList readNeighbors()
 {
-    for(auto& neib : ns){
-		port_ptr port = sn->newPort();
-        neib.port = port;
-        sn->addNeighbor(neib);
-    
-        HelloCmd::Hello hello{
-            sn->getAddress().raw(),
-            port->transport()->local_ep().ip,
-            port->transport()->local_ep().port
-        };
-		ss->sayHello(neib.comminucate_ep, hello);
+    NeighborList ns;
+    std::ifstream fs("neighbors.conf");
+    if( !fs.good()){
+        std::cout<<"no neighbors configs\n";
+        return ns;
     }
-}
 
-void updateNeighbors(CommandSession* ss, Snode* sn)
-{
-    auto ns = sn->getNeighbors();
-    for(auto& neib : ns){
-    
-        HelloCmd::Hello hello{
-            sn->getAddress().raw(),
-            neib.port->transport()->local_ep().ip,
-            neib.port->transport()->local_ep().port
-        };
-		ss->sayHello(neib.comminucate_ep, hello);
+    boost::json::error_code ec;
+    boost::json::stream_parser p;
+    std::string line;
+    while( std::getline( fs, line ) )
+    {
+        p.write( line, ec );
+        if( ec ){
+            std::cout<<"neighbors.conf configs syntax error\n";
+            return ns;
+        }
     }
+
+    p.finish( ec );
+    if( ec ){
+        std::cout<<"neighbors.conf configs syntax error\n";
+        return ns;
+    }
+    auto jo = p.release().as_object();
+
+    try {
+        auto j = jo["neighbors"];
+        auto ja = jo["neighbors"].as_array();
+        for(auto i : ja){
+            auto jneib = i.as_object();
+            uint32_t sn = jneib["sn"].as_int64();
+            uint32_t en = jneib["en"].as_int64();
+            std::string name= jneib["name"].as_string().c_str();
+            uint16_t port = jneib["port"].as_int64();;
+            std::string ip= jneib["ip"].as_string().c_str();
+            ns.push_back( {name, Address(sn,en), nullptr, {ip, port}} );
+        }
+    } catch (std::exception& e) {
+        std::cout<<"parse neighbors.conf failed:"<<e.what()<<std::endl;
+    }
+
+    return ns;
 }
 
 void cmd(RouterImpl* router, CurThreadingScope* s)
@@ -124,25 +158,22 @@ int main(int argc, char* argv[])
 	AddressManager addressmgr = AddressManager(atoi(argv[1]));
 	SnodeImpl sn(router, &addressmgr, &transportmgr);
 
+    EventQueueEpoll eq;
+    CurThreadingScope curc(&eq);
+    NeighborManagerT<CurThreadingScope> nm(&sn, &curc);
+
 	local_ip = argv[2];
 	uint16_t port= atoi(argv[3]);
     TransEndpoint service_ep{local_ip, port};
 	CommandSession cmd_sess(&sn,
+            &nm,
 			&transportmgr,
 			service_ep);
 
     configStaticRoute(&sn);
 
-    NeighborMap neighbours;
-    readNeighbors(neighbours);
-    setNeighbors(&cmd_sess, &sn, neighbours);
-
-    EventQueueEpoll eq;
-    CurThreadingScope curc(&eq);
-    std::unique_ptr<Timer> timer(Timer::start(3000, [&]{
-        updateNeighbors(&cmd_sess, &sn);
-        cout<<"update neighbors...\n";
-    }, curc.poller()));
+    NeighborList neighbours = readNeighbors();    
+    nm.initNeighbors(&cmd_sess, neighbours);
 
     //listen stdin (fd=0)
     eq.bindInput(0, [&]{

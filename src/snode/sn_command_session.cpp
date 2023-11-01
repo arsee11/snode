@@ -4,6 +4,7 @@
 #include "core/sn_address_manager.h"
 #include "core/sn_transport_manager.h"
 #include "core/sn_port.h"
+#include "sn_neighbor.h"
 
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -12,10 +13,12 @@ using std::placeholders::_3;
 namespace snode {
 
 CommandSession::CommandSession(Snode *snode,
+        NeighborManager* nm,
         TransportManager* transportmgr,
         const TransEndpoint& ep
 )
     :_snode(snode)
+    ,_neighbors_m(nm)
     ,_transportmgr(transportmgr)
 {
     _cmd_transport_server.reset(_transportmgr->getUdpTransportServer(ep));
@@ -28,9 +31,6 @@ CommandSession::CommandSession(Snode *snode,
         CmdDispatcher<AddressConfirmCmd>{std::bind(&CommandSession::onAddressConfirm, this, _1)}
     );    
     _cmd_parser.setDispatcher(
-        CmdDispatcher<ShareRoutingCmd>{std::bind(&CommandSession::onSharedRouting, this,_1)}
-    );  
-     _cmd_parser.setDispatcher(
         CmdDispatcher<HelloCmd>{std::bind(&CommandSession::onHello, this,_1)}
     );      
     _cmd_parser.setDispatcher(
@@ -157,43 +157,6 @@ cmd_ptr CommandSession::onAddressConfirm(Command* req)
     return cmd_ptr(rsp);
 }
 
-class SharedRoutingTransaction: public Transaction
-{
-public:
-    SharedRoutingTransaction(const std::string& id)
-        :Transaction(id)
-    {
-    }
-
-    void updateRouting(const Neighbor& neigh, const RoutingInfo& info){
-        _neigh = neigh;
-        _info = info;
-    }
-
-    RoutingMethod* routing_method=nullptr;
-    void commit()override{
-        routing_method->updateRouting(_neigh.addr, _info);
-    }
-
-    void rollback()override{
-    }
-
-private:
-    Neighbor _neigh;
-    RoutingInfo _info;
-};
-
-cmd_ptr CommandSession::onSharedRouting(Command* req)
-{
-    auto cmd = static_cast<ShareRoutingCmd*>(req);
-
-    SharedRoutingTransaction transaction(req->id);
-    //transaction.routing_method = _router->routing_method();
-    transaction.updateRouting(cmd->neighbor, cmd->info);
-    transaction.commit();
-
-    return nullptr;
-}
 
 cmd_ptr CommandSession::onHello(Command* req)
 {
@@ -201,7 +164,7 @@ cmd_ptr CommandSession::onHello(Command* req)
     Address addr = cmd->hello.address;
     TransEndpoint ep(cmd->hello.ip, cmd->hello.port);
 
-    _snode->configNeighbor(addr, ep);
+    _neighbors_m->onNeighborUpdate(this, addr, ep);
     return nullptr;
 }
 

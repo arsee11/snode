@@ -32,6 +32,7 @@ public:
                     const Address& next_hop);
 
     void addNeighbor(const Address& n)override;
+    void delNeighbor(const Address& n)override;
 
     void my_address(const Address& addr){
         _my_address = addr;
@@ -40,6 +41,8 @@ public:
     Address my_address()const{
         return _my_address;
     }
+
+    int unreachable_metric()const override;
 
 protected:
     void onLinkUpdate(const Message& msg)override;

@@ -5,9 +5,9 @@
 
 namespace snode{
 
-port_ptr RouteTable::routing(const Address &dst)const
+port_ptr RouteTable::routing(const Address &dst, int unreachable)const
 {  
-    return getBestRoute(find_dst(dst));
+    return getBestRoute(find_dst(dst), unreachable);
 }
 
 routeitem_ptr RouteTable::find_best_by_dst(const Address &dst) const
@@ -33,6 +33,21 @@ RouteTable::List RouteTable::find_dst(const Address &dst) const
     }
     return ilist->second;
 }
+
+RouteTable::List RouteTable::find_by_nexthop(const Address& next_hop)const
+{
+    List list;
+    for(const auto& items : _routes){
+        for( const auto& i : items.second){
+            if(i->next_hop == next_hop){
+                list.push_back(i);
+            }
+        }
+    }
+
+    return list;
+}
+
 
 routeitem_ptr RouteTable::add(const Address &dst,
                     int metric,
@@ -68,13 +83,16 @@ std::vector<routeitem_ptr> RouteTable::getAllItems()const
     return items;
 }
 
-port_ptr RouteTable::getBestRoute(const List& list)const
+port_ptr RouteTable::getBestRoute(const List& list, int unreachable)const
 {
     if(list.size() == 0){
         return nullptr;
     }
 
     routeitem_ptr item = getBestItem(list);
+    if(item->metric >= unreachable){
+        return nullptr;
+    }
     return item->port;
 }
 

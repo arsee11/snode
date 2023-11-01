@@ -26,12 +26,14 @@ using transaction_ptr=std::shared_ptr<Transaction>;
 
 class AddressManager;
 class TransportManager;
+class NeighborManager;
 
 class CommandSession
 {
 public:
     CommandSession(
         Snode *snoder,
+        NeighborManager* nm,
         TransportManager* transportmgr,
         const TransEndpoint& ep
     );
@@ -48,13 +50,14 @@ protected:
 private:
     cmd_ptr onRegister(Command* req);
     cmd_ptr onAddressConfirm(Command* req);
-    cmd_ptr onSharedRouting(Command* req);
     cmd_ptr onHello(Command* req);
     cmd_ptr onCmdOK(Command* req);
 
     std::map<std::string, transaction_ptr> _transaction_map;
     CommandParser _cmd_parser;
     Snode* _snode;
+    NeighborManager* _neighbors_m;
+    AddressManager* _addrmgr;
     TransportManager* _transportmgr;
 };
 

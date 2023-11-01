@@ -45,6 +45,8 @@ void RIPRoutingMethod::stop()
 
 void RIPRoutingMethod::addNeighbor(const Address& n)
 {
+    assert(_thrscope != nullptr);
+    assert(_thrscope->isInMyScope());
     auto it = std::find(_neighbors.begin(), _neighbors.end(), n);
     if(it == _neighbors.end()){
         _neighbors.push_back(n);
@@ -53,14 +55,29 @@ void RIPRoutingMethod::addNeighbor(const Address& n)
 
 void RIPRoutingMethod::removeNeighbor(const Address& n)
 {
+    assert(_thrscope != nullptr);
+    assert(_thrscope->isInMyScope());
+
     auto it = std::find(_neighbors.begin(), _neighbors.end(), n);
     if(it != _neighbors.end()){
         _neighbors.erase(it);
+    }
+
+    if(_route_table == nullptr){
+        return;
+    }
+
+    auto ritems = _route_table->find_by_nexthop(n);
+    for( auto ritem : ritems){
+        ritem->metric = UNREACHABLE;
     }
 }
 
 void RIPRoutingMethod::onRecvMsg(const Address& from, const uint8_t *msg_buf, size_t size)
 {
+    assert(_thrscope != nullptr);
+    assert(_thrscope->isInMyScope());
+
     RIPMessage msg = RIPMessage::parse(msg_buf, size);
     if(msg.command == RIPMessage::InvalidCommand){
         //log<<"Invalide RIP message received."
@@ -104,9 +121,8 @@ void RIPRoutingMethod::updateRouting(const Address& from, const RoutingInfo& inf
     for(auto item : info.items){
         auto ritem = _route_table->find_best_by_dst(item.dst);
         if(ritem == nullptr){ //is a new item
-            auto port = _route_table->routing(from);
-            ritem = _route_table->add(item.dst, item.metric+1, from, port);
-            if(_required_port_cb != nullptr && port == nullptr){
+            ritem = _route_table->add(item.dst, item.metric+1, from, nullptr);
+            if(_required_port_cb != nullptr){
                 _required_port_cb(ritem);
             }
         }

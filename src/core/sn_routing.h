@@ -46,7 +46,8 @@ public:
     virtual void listenMessageReady(const message_cb& cb)=0;
     virtual void listenRequiredPort(const required_port_cb& cb)=0;
     virtual void route_table(RouteTable* rt)=0;
-    virtual void updateRouting(const Address& from, const RoutingInfo& info)=0;
+    virtual int unreachable_metric()const =0;
+;
 
 };
 

@@ -23,19 +23,6 @@ using routeitem_ptr = std::shared_ptr<RouteItem>;
 
 class RouteTable
 {
-public:
-    port_ptr routing(const Address&	dst)const;
-    routeitem_ptr find_best_by_dst(const Address& dst)const;
-
-    routeitem_ptr add(const Address &dst,
-             int metric,
-             const Address& next_hop, 
-             const snode::port_ptr &port
-    );
-
-    std::vector<routeitem_ptr> getAllItems()const;
-
-private:
     ///|dst|RouteItem|
     ///|1  |item1     |
     ///|   |item2     |
@@ -45,12 +32,26 @@ private:
     ///@key dst snode address
     ///@value RouteItem
     using Table = std::unordered_map<Address, List, AddressHash>;
+
+public:
+    port_ptr routing(const Address&	dst, int unreachable)const;
+    routeitem_ptr find_best_by_dst(const Address& dst)const;
+    List find_by_nexthop(const Address& next_hop)const;
+    routeitem_ptr add(const Address &dst,
+             int metric,
+             const Address& next_hop, 
+             const snode::port_ptr &port
+    );
+
+    std::vector<routeitem_ptr> getAllItems()const;
+
+private:    
     Table _routes;
 
 private:
     List find_dst(const Address& dst)const;
     routeitem_ptr getBestItem(const List& l)const;
-    port_ptr getBestRoute(const List& list)const;
+    port_ptr getBestRoute(const List& list, int unreachable)const;
 
 };
 

@@ -21,10 +21,12 @@ public:
     Router() =default;
     virtual void setThreadingScope(ThreadScopePolling* thr)=0;
 
-    //virtual void addDirectLink(const Address& next_hop, const port_ptr& port)=0;
     void addPort(const Address& next_hop, const port_ptr& port);
     port_ptr findPort(const Address& next_hop);
+    void delPort(const Address& next_hop);
     virtual void addNeighbor(const Address& n)=0;
+    virtual void delNeighbor(const Address& n)=0;
+    virtual int unreachable_metric()const = 0;
 
 protected:
     void onPortInput(Port* srcport, const Message& msg);
@@ -47,7 +49,7 @@ public:
 	RouterT()=default;
 	int forward(const Message& msg)override{ 
 			
-		port_ptr port = _route_table.routing(msg.dst());
+		port_ptr port = _route_table.routing(msg.dst(), unreachable_metric());
 		if(port != nullptr)
 			return port->output(msg);
 		

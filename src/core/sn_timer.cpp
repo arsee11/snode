@@ -18,9 +18,16 @@ public:
     {}
 
 private:
+    void stop()override{
+        Timer::stop();
+        if(_timeout_cb != nullptr){
+            _timeout_cb(Invalid);
+        }
+    }
+
     void onTimeout()override{
-         if(_timeout_cb != nullptr){
-                    _timeout_cb();
+        if(_timeout_cb != nullptr){
+            _timeout_cb(Timeout);
         }
     }
     timeout_cb _timeout_cb;
@@ -36,21 +43,29 @@ public:
     }
 
 private:
-    void onTimeout()override{
-        _promise.set_value();
+    void stop()override{
+        Timer::stop();
+        try{
+            _promise.set_value(Invalid);
+        }catch(...){}
     }
+
+    void onTimeout()override{
+        _promise.set_value(Timeout);
+    }
+
     int wait()override{
         if(_is_running){
-            _future.wait();
-            return Timeout;
+            int state = _future.get();
+            return state;
         }
         else{
             return Invalid;
         }
     }
 
-    std::promise<void> _promise;
-    std::future<void> _future;
+    std::promise<int> _promise;
+    std::future<int> _future;
 };
 
 
@@ -115,8 +130,8 @@ void Timer::loop()
 {		
     uint64_t exp=0;
     int n = read(_fd, &exp, sizeof(exp));
-    //std::cout<<"read "<<n<<" bytes, value:"<<exp<<"\n";
-    if( n < sizeof(exp)){
+    std::cout<<"read "<<n<<" bytes, value:"<<exp<<"\n";
+    if( n<0 || n < sizeof(exp)){
         perror("read");
         return;
     }

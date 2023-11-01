@@ -23,9 +23,8 @@ public:
     virtual ~SnodeImpl();
     Address getAddress()const override;
     bool setupCommandTransport(const std::string& local_ip, int local_port)override;
-    void addNeighbor(const Neighbor& neib)override;
-    void configNeighbor(const Address& neib_addr, const TransEndpoint& neib_port_ep)override;
-    NeighborMap getNeighbors()const override;
+    void disableNeighbor(const Neighbor& neib)override;
+    void configNeighbor(const Neighbor& neib, const TransEndpoint& neib_port_ep)override;
     void addEnode(Address addr, port_ptr port, const TransEndpoint& remote_ep)override;
     void addStaticRoute(const Address& dst, int metric, const Address& next_hop)override;
     port_ptr newPort()override;
@@ -40,8 +39,6 @@ protected:
     std::string _local_forward_ip;
     std::string _local_cmd_ip;
     int _local_cmd_port=0;
-    std::map<Address, Neighbor> _neighbors;
-
 
     EventQueueEpoll _event_eq;
     std::unique_ptr<ThreadScopePolling> _thrscope;

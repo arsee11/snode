@@ -1,6 +1,7 @@
 //sn_snode_impl.cpp
 
 #include "sn_snode_impl.h"
+#include "sn_neighbor.h"
 
 namespace snode {
 
@@ -20,7 +21,8 @@ SnodeImpl::SnodeImpl(RouterImpl *router,
 
 SnodeImpl::~SnodeImpl()
 {
-    _router->stop();
+     assert(_thrscope != nullptr);
+    _thrscope->exec([&]{_router->stop();});
 }
 
 Address SnodeImpl::getAddress() const
@@ -37,49 +39,31 @@ bool SnodeImpl::setupCommandTransport(
     return true;
 }
 
-void SnodeImpl::addNeighbor(const Neighbor& neib)
+void SnodeImpl::disableNeighbor(const Neighbor& neib)
 {
     assert(_thrscope != nullptr);
     _thrscope->post([this, neib]{
-        _router->addPort(neib.addr, neib.port);    
-        _neighbors.insert({neib.addr, neib});
+        _router->delPort(neib.addr); 
+        _router->delNeighbor(neib.addr);   
     });
 }
 
-void SnodeImpl::configNeighbor(const Address& neib_addr, const TransEndpoint& neib_port_ep)
+void SnodeImpl::configNeighbor(const Neighbor& neib, const TransEndpoint& neib_port_ep)
 {
     assert(_thrscope != nullptr);
-    _thrscope->post([this, neib_addr, neib_port_ep]{
-        auto neib = _neighbors.find(neib_addr);
-        if(neib == _neighbors.end()){
-            //loge()<<"not configtable neighbor addr"<<neib_addr;
-            return;
-        }
-        
-        auto port = _router->findPort(neib_addr);
+    _thrscope->post([this, neib, neib_port_ep]{
+          _router->addPort(neib.addr, neib.port);    
+
+        auto port = neib.port;
         if(port == nullptr){
             //logi()<<"no port for neighbor addr"<<neib_addr<<" create one";
             port = newPort();
-            _router->addPort(neib_addr, port);
-            neib->second.port = port;
+            _router->addPort(neib.addr, port);
         }
         port->transport()->remote_ep(neib_port_ep);
-        _router->updateRouting(Address(neib_addr.sn(), 0u), 1, neib_addr);
-        _router->addNeighbor(neib_addr);
+        _router->updateRouting(Address(neib.addr.sn(), 0u), 1, neib.addr);
+        _router->addNeighbor(neib.addr);
     });
-}
-
-NeighborMap SnodeImpl::getNeighbors() const
-{
-    assert(_thrscope != nullptr);
-    return _thrscope->invoke([this]{
-        NeighborMap ns;
-        for(auto i : _neighbors){
-            ns.push_back(i.second);
-        }
-        return ns;
-    });
-
 }
 
 void SnodeImpl::addStaticRoute(
